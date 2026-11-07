@@ -29,7 +29,7 @@ fi
 set -x
 cat > /etc/systemd/system/thumbstop.service <<'EOF'
 [Unit]
-Description=Thumbstop promo finder (Streamlit)
+Description=Thumbstop promo finder (uvicorn)
 After=network-online.target
 Wants=network-online.target
 
@@ -38,9 +38,8 @@ User=app
 WorkingDirectory=/home/app/thumbstop
 Environment=AWS_EC2_METADATA_DISABLED=true
 Environment=THUMBSTOP_RECORDED_ANSWERS=/home/app/private/recorded_answers.json.gz
-ExecStart=/home/app/thumbstop/.venv/bin/streamlit run app.py --server.headless true --server.address 0.0.0.0 \
-  --server.port 8501 --server.enableCORS false --server.enableXsrfProtection false \
-  --browser.gatherUsageStats false --client.toolbarMode minimal
+ExecStart=/home/app/thumbstop/.venv/bin/uvicorn server:app --host 0.0.0.0 --port 8501 --workers 1 \
+  --proxy-headers --forwarded-allow-ips '*' --no-server-header
 Restart=always
 RestartSec=3
 

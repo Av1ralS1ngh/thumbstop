@@ -1,6 +1,7 @@
-# Streamlit Community Cloud installs this (entry point: app.py, Python 3.12). Major versions pinned;
-# lower bounds are the versions the code was tested with.
-streamlit>=1.67,<2
+# Python 3.12. Major versions pinned; lower bounds are the versions the code was tested with.
+# The hosted app is server.py (Starlette + uvicorn); tests also need pytest and httpx.
+starlette>=1.0,<2
+uvicorn>=0.40,<1
 pydantic>=2.14,<3
 pyyaml>=6.0,<7
 rapidfuzz>=3.14,<4

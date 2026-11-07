@@ -12,11 +12,11 @@ for an opening a stranger can follow.
 ## Quick start
 
 ```bash
-uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt pytest
+uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt pytest httpx
 .venv/bin/python -m thumbstop run tests/fixtures/new_show --offline        # no network, no key, ~1 s
 .venv/bin/python -m thumbstop run <folder of episodes> --out runs/myshow   # real models (AWS login), see below
-open runs/myshow/review.html                                               # cut sheets + accept / nudge / reject
-streamlit run app.py                                                       # the web app
+open runs/myshow/review.html                                               # review desk: play each promo, accept / nudge / reject
+.venv/bin/uvicorn server:app --port 8501                                   # the web app
 # open http://localhost:8501/?demo=1 to run the built-in demo show on arrival
 .venv/bin/python record_demo.py   # re-record the AI answers the app replays for its demo show (no-key mode)
 # THUMBSTOP_RECORDED_ANSWERS=/path/answers.json.gz adds more recorded answers (kept outside the repo); they only
@@ -24,8 +24,9 @@ streamlit run app.py                                                       # the
 ```
 
 Outputs in `--out`: `promos.json` and `promos.csv` (rank, episode, start/end of every segment, hook, cliffhanger,
-why it works), `report.md` (post-first picks and the ranked table), `review.html` (cut sheets: IN ON / OUT ON /
-STOP BEFORE lines, timecodes with handles, cut confidence, cold-viewer verdict, ad-policy status), `selects.edl`
+why it works), `report.md` (post-first picks and the ranked table), `review.html` (a single-file review desk:
+each promo plays as an animatic from the script, with the cut sheet, cold-viewer verdict, ad-policy status and accept /
+nudge / reject; `review.json` is the same data), `selects.edl`
 (CMX3600, all picks back to back for Premiere / Resolve), `trace.jsonl` (every model call).
 
 ## How it works
@@ -84,7 +85,8 @@ default judge, GPT-OSS-120B, is the same model Groq serves on its free tier.
 
 The input pack is confidential. `.gitignore` excludes `input_pack/`, `runs/`, `labels/`, `.cache/` and `.env`; a
 git pre-commit hook (`scripts/leak_check.py`) blocks any commit containing an 8-word run of text from the pack.
-Test fixtures are original fiction. The Streamlit app processes uploads in a temporary folder and deletes it.
+Test fixtures are original fiction. The web app processes uploads in a temporary folder that is deleted when the
+run ends, and keeps results in memory for an hour so they can be downloaded.
 
 ## Tests
 

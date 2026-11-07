@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thumbstop · find the promo in every episode</title>
+<meta name="description" content="Thumbstop reads a season of microdrama scripts and finds 20 to 60 second promos that open on a hook, end on a cliffhanger and make sense to a stranger.">
+<meta name="theme-color" content="#0b0a08">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23d9b46a'/%3E%3Cpath d='M13 10l9 6-9 6z' fill='%231b1408'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/review.css">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body class="tsr-page app">
+<header class="nav">
+  <a class="logo" href="/"><span class="tsr-mark"></span><b>Thumbstop</b></a>
+  <nav><a href="#how">How it works</a><a href="https://github.com/Av1ralS1ngh/thumbstop" target="_blank" rel="noopener">GitHub ↗</a></nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="tsr-eyebrow">Promo finder for microdrama scripts</div>
+      <h1>Find the promo <em>hiding</em> in every episode.</h1>
+      <p class="lede">Give it a season of timestamped scripts. Thumbstop finds the 20 to 60 second clips that open on a hook
+        in the first 3 seconds, end on a cliffhanger and still make sense to a stranger, ranks them, and tells you which to post first.</p>
+      <div class="hero-show">
+        <figure class="teaser" aria-label="A promo Thumbstop found in the demo show, playing from its script">
+          <div class="teaser-phone" id="teaser"></div>
+          <figcaption>A promo it found, playing from the script</figcaption>
+        </figure>
+        <ul class="facts">
+          <li><b>3 s</b> hook, every time</li>
+          <li><b>0</b> lines cut in half</li>
+          <li><b>2</b> AI models, one checks the other</li>
+          <li><b>~$2.70</b> for a 50-episode show</li>
+        </ul>
+      </div>
+    </div>
+
+    <form class="run" id="run" novalidate>
+      <div class="run-h"><b>Try it</b><span id="run-badge">No key needed</span></div>
+      <div class="seg2" role="radiogroup" aria-label="Scripts">
+        <label><input type="radio" name="source" value="demo" checked><span><b>Demo show</b><small id="demo-sub">3 short episodes, original fiction</small></span></label>
+        <label><input type="radio" name="source" value="upload"><span><b>Your scripts</b><small>A .zip of episodes</small></span></label>
+      </div>
+      <div class="drop" id="drop" hidden>
+        <input type="file" id="file" accept=".zip,application/zip">
+        <div class="drop-in" id="drop-in"><span class="drop-ic"></span><b>Drop a .zip here, or click to choose</b>
+          <small>.txt screenplays, .srt or .vtt subtitles, up to 50 MB</small></div>
+        <div class="drop-file" id="drop-file" hidden></div>
+      </div>
+      <div class="field">
+        <div class="field-l">Model</div>
+        <div class="modes" id="modes" role="radiogroup" aria-label="Model"></div>
+      </div>
+      <div class="keys" id="keys-bedrock" hidden>
+        <label>AWS region<input name="region" value="us-east-1" autocomplete="off"></label>
+        <label>Access key ID<input name="key_id" type="password" autocomplete="off"></label>
+        <label>Secret access key<input name="secret" type="password" autocomplete="off"></label>
+        <label>Session token <small>(optional)</small><input name="token" type="password" autocomplete="off"></label>
+        <p>Keys are used for this one run and never stored.</p>
+      </div>
+      <div class="keys" id="keys-custom" hidden>
+        <label>Base URL<input name="base_url" placeholder="https://api.example.com/v1" autocomplete="off"></label>
+        <label>Model<input name="model" placeholder="model-id" autocomplete="off"></label>
+        <label>API key<input name="api_key" type="password" autocomplete="off"></label>
+        <p>One model plays every role, so the cold-viewer check is less independent. The key is used for this run only.</p>
+      </div>
+      <details class="adv" id="adv">
+        <summary>Settings</summary>
+        <div class="adv-grid">
+          <label>Promos to rank<input name="top" type="number" min="1" max="50" value="20"></label>
+          <label>Shortest (s)<input name="min" type="number" min="5" max="175" value="20"></label>
+          <label>Longest (s)<input name="max" type="number" min="10" max="180" value="60"></label>
+          <label>Episodes<input name="episodes" placeholder="all, or 1-10"></label>
+          <label class="chk"><input name="fast" type="checkbox"> Fast mode <small>no setup repair, no proposals</small></label>
+        </div>
+        <p class="adv-note" id="adv-note" hidden>The recorded run replays the default settings, so these apply to the live models.</p>
+      </details>
+      <button class="go" type="submit" id="go"><span>Find promos</span></button>
+      <div class="runbar" id="runbar" hidden><span class="runbar-dot"></span><span id="runbar-text"></span></div>
+      <div class="run-err" id="run-err" role="alert" hidden></div>
+      <p class="run-note" id="run-note"></p>
+    </form>
+  </section>
+
+  <section class="how" id="how">
+    <div class="how-h">
+      <div><div class="tsr-eyebrow">How it works</div><h2>Five steps, and the AI never writes a timestamp</h2></div>
+      <p id="how-note">Code does the counting and cutting. The AI only points at numbered lines, so a cut point can't be made up.</p>
+    </div>
+    <ol class="steps" id="steps">
+      <li><span class="n">1</span><b>Read</b><p>Every line of every script becomes a numbered beat with its timestamps.</p><small>Code</small><em></em></li>
+      <li><span class="n">2</span><b>Mark</b><p>Claude reads each episode and points at the lines worth opening on and ending on.</p><small>AI</small><em></em></li>
+      <li><span class="n">3</span><b>Cut</b><p>Every opening and ending pair is tried against the rules: 20 to 60 s, hook in 3 s, clean cuts.</p><small>Code</small><em></em></li>
+      <li><span class="n">4</span><b>Check</b><p>A different model watches each clip cold and says whether a stranger would follow it.</p><small>AI</small><em></em></li>
+      <li><span class="n">5</span><b>Rank</b><p>Best first, with variety, ad-policy status, cut sheets, an EDL and what to post first.</p><small>Code</small><em></em></li>
+    </ol>
+  </section>
+
+  <section class="results" id="results" hidden></section>
+</main>
+
+<footer class="foot">
+  <p>Uploaded scripts are processed in a temporary folder that is deleted when the run ends. Results stay in this server's
+    memory for an hour so you can download them, and any API key is used for that one run and never stored.</p>
+  <p>Thumbstop · built for the Kuku AI Generalist assignment · <a href="https://github.com/Av1ralS1ngh/thumbstop" target="_blank" rel="noopener">source on GitHub</a></p>
+</footer>
+<button class="jump" id="jump" type="button" hidden>See the promos <span>↓</span></button>
+
+<script src="/assets/review.js"></script>
+<script src="/assets/app.js"></script>
+</body>
+</html>

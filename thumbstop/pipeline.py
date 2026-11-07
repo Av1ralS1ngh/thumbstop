@@ -152,7 +152,8 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
             "by_role": {k: v.__dict__ for k, v in router.budget.by_role.items()},
             "seconds": round(time.time() - t_start, 1), "funnel": funnel,
             "options": {k: v for k, v in opt.__dict__.items()}, "ingest": rep}
-    write_all(show, out, ranked, variants, picks, meta,
+    genders = {n: {r.label: r.gender for r in a.roles} for n, a in anns.items()}
+    write_all(show, out, ranked, variants, picks, meta, genders=genders,
               extra={"repairs": [{"id": r.id, "from": (r.repair or {}).get("from"), "result": (r.repair or {}).get("result"),
                                   "log": (r.repair or {}).get("log")} for r in repaired]})
     (out / "candidates.json").write_text(json.dumps(
