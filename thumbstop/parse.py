@@ -21,6 +21,8 @@ RX_LABEL = re.compile(r"^\s*\*\*(.+?):?\*\*:?\s*$")
 RX_TS = re.compile(
     r"^\s*Start\s*:\s*\(?\s*([\d:.,]+)\s*\)?\s*(?:\||-|–|to|\t)\s*End\s*:\s*\(?\s*([\d:.,]+)\s*\)?\s*$", re.I
 )
+RX_START = re.compile(r"^\s*-{2,}\s*SCRIPT\s+START\s*-{2,}\s*$", re.I)
+RX_SKIP = re.compile(r"^\s*(actions?\s+and\s+dialogue\s*:?|-{2,}.*-{2,})\s*$", re.I)
 RX_END = re.compile(r"^\s*-{2,}\s*SCRIPT\s+END\s*-{2,}\s*$", re.I)
 RX_FILE_EP = re.compile(r"episode[-_ ]?0*(\d+)", re.I)
 RX_INLINE_TAG = re.compile(r"\[([^\]]{1,40})\]")
@@ -87,6 +89,7 @@ def parse_episode(path: Path) -> Episode:
     header_num: int | None = None
     scene: Scene | None = None
     i, n, idx = 0, len(lines), 0
+    in_script = False
     while i < n:
         line = lines[i]
         where = f"{path.name}:{i + 1}"
@@ -139,6 +142,10 @@ def parse_episode(path: Path) -> Episode:
             ))
             i = k
             continue
+        elif in_script and line.strip() and not RX_SKIP.match(line):
+            ep.warnings.append(f"{where}: ignored unrecognised line '{line.strip()[:50]}'")
+        if RX_START.match(line):
+            in_script = True
         i += 1
 
     if header_num is not None:
