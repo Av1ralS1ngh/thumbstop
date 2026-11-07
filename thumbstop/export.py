@@ -105,13 +105,17 @@ def write_all(show: Show, out: Path, ranked: list[Promo], variants: dict, picks:
 
 
 def write_edl(path: Path, show: Show, ranked: list[Promo]) -> None:
-    """CMX3600: every segment of every ranked promo, back to back, with a comment per promo."""
+    """CMX3600: every segment of every ranked promo, back to back, with a comment per promo.
+    Record times are counted in whole frames so each event's record length equals its source length."""
     lines = [f"TITLE: {show.name[:60]} - promo selects", "FCM: NON-DROP FRAME", ""]
-    ev, rec = 1, 3600.0
+    def tc(frames: int) -> str:
+        return fmt_tc(frames / FPS, FPS)
+
+    ev, rec = 1, 3600 * FPS
     for p in ranked:
         for i, s in enumerate(p.segments):
-            src_in, src_out = fmt_tc(s.start, FPS), fmt_tc(s.end, FPS)
-            r_in, r_out = fmt_tc(rec, FPS), fmt_tc(rec + s.dur, FPS)
+            f_in, f_out = round(s.start * FPS), round(s.end * FPS)
+            src_in, src_out, r_in, r_out = tc(f_in), tc(f_out), tc(rec), tc(rec + f_out - f_in)
             lines.append(f"{ev:03d}  EP{s.ep:03d}   V     C        {src_in} {src_out} {r_in} {r_out}")
             lines.append(f"{ev:03d}  EP{s.ep:03d}   A     C        {src_in} {src_out} {r_in} {r_out}")
             if i == 0:
@@ -119,8 +123,8 @@ def write_edl(path: Path, show: Show, ranked: list[Promo]) -> None:
             lines.append(f"* FROM CLIP NAME: EP{s.ep:03d}")
             lines.append("")
             ev += 1
-            rec += s.dur
-        rec += 2.0  # 2 s gap between promos
+            rec += f_out - f_in
+        rec += 2 * FPS  # 2 s gap between promos
     path.write_text("\n".join(lines))
 
 

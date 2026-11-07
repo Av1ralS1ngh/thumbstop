@@ -42,6 +42,7 @@ def policy_status(show: Show, p: Promo) -> dict:
         if (h["rule"], h["beat"]) not in seen:
             seen.add((h["rule"], h["beat"]))
             ev.append(h)
+    ev.sort(key=lambda h: h["level"] != "HOLD")  # stable: HOLD reasons survive the cap below
     return {"status": status, "evidence": ev[:6],
             "note": "Text-only check; final frames decide platform approval. Applies to Meta, TikTok and YouTube ads."}
 
