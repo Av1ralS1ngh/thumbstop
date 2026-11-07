@@ -144,7 +144,10 @@
     resetSteps(); paintSteps(0);
     runbar.hidden = false;
     if (review) { review.destroy(); review = null; }
-    results.hidden = true; results.innerHTML = ""; jump.hidden = true;
+    // a placeholder of what's coming, which also gives the page room to settle on the steps
+    results.hidden = false; jump.hidden = true;
+    results.innerHTML = `<div class="skel" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="s3"></i>
+      <div class="skel-row"><i></i><i></i><i></i></div><div class="skel-desk"><i></i><i></i></div></div>`;
     let jid;
     try {
       const r = await fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -152,9 +155,10 @@
       if (!r.ok) throw new Error(d.error || "Could not start the run.");
       jid = d.job_id;
     } catch (e) {
-      setBusy(false); runbar.hidden = true; resetSteps();
+      setBusy(false); runbar.hidden = true; resetSteps(); results.hidden = true;
       return showErr(e.message);
     }
+    if (o.scroll) $("#how").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
     let shown = 0, final = null;
     for (;;) {
       let d;
@@ -162,8 +166,12 @@
         const r = await fetch(`/api/jobs/${jid}`, { cache: "no-store" });
         d = await r.json();
         if (!r.ok) throw new Error(d.error || "Lost touch with the server.");
-      } catch (e) { setBusy(false); paintSteps(shown, true); return showErr(e.message); }
-      if (d.state === "error") { setBusy(false); paintSteps(shown, true); runbarText.textContent = "Stopped"; return showErr(d.error, d.kind); }
+      } catch (e) { setBusy(false); paintSteps(shown, true); results.hidden = true; return showErr(e.message); }
+      if (d.state === "error") {
+        setBusy(false); paintSteps(shown, true); runbarText.textContent = "Stopped"; results.hidden = true;
+        if (o.scroll) form.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+        return showErr(d.error, d.kind);
+      }
       const target = d.state === "done" ? 5 : d.stage;
       // step through the stages at a readable pace, even when a recorded run finishes in a second
       while (shown < target) { shown++; paintSteps(shown); await sleep(reduced ? 0 : d.state === "done" ? 340 : 140); }
@@ -185,11 +193,8 @@
     review = window.ThumbstopReview.mount($("#review-root"), res.view, {
       downloads: res.files.map((name) => ({ label: FILE_LABEL[name] || name, href: `/api/jobs/${jid}/files/${name}`, name })),
     });
-    if (o.scroll) {
-      requestAnimationFrame(() => results.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }));
-    } else {
-      jump.hidden = false;
-    }
+    // the results appear right under the steps; point the way only when they start below the screen
+    requestAnimationFrame(() => { jump.hidden = results.getBoundingClientRect().top < window.innerHeight - 24; });
   }
 
   jump.addEventListener("click", () => { jump.hidden = true; results.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); });

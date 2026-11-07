@@ -72,8 +72,7 @@
     return `
 <div class="tsr-phone" tabindex="0" role="button" aria-label="Play or pause promo number ${p.rank}">
   <div class="ph-scene"><div class="ph-bg"></div><div class="ph-grain"></div><div class="ph-vignette"></div></div>
-  <div class="ph-top"><span class="ph-ep">EP ${esc(eps)}</span><span class="ph-seg"></span></div><span class="ph-sfx"></span>
-  <div class="ph-ring off"><svg viewBox="0 0 22 22" aria-hidden="true"><circle class="bgc" cx="11" cy="11" r="9"/><circle class="fg" cx="11" cy="11" r="9"/></svg><span>First 3 s</span></div>
+  <div class="ph-top"><span class="ph-ep">EP ${esc(eps)}</span><span class="ph-ring off"><svg viewBox="0 0 22 22" aria-hidden="true"><circle class="bgc" cx="11" cy="11" r="9"/><circle class="fg" cx="11" cy="11" r="9"/></svg><span>First 3 s</span></span><span class="ph-seg"></span></div><span class="ph-sfx"></span>
   <div class="ph-pic"><p class="ph-pictext"></p></div>
   <div class="ph-badges"><span class="ph-badge hook">The hook</span><span class="ph-badge cliff">Cliffhanger</span></div>
   <div class="ph-cap off"><span class="ph-who"></span><p class="ph-line"></p></div>
