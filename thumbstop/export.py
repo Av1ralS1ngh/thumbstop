@@ -8,6 +8,7 @@ import html
 import json
 from pathlib import Path
 
+from .annotate import RULES_QUESTION
 from .models import Beat, Show, fmt_tc, fmt_ts
 from .search import Promo, cut_confidence
 
@@ -223,7 +224,7 @@ def _say_item(it: dict) -> str:
 
 def _title(r: dict) -> str:
     q = (r.get("open_question") or "").strip()
-    if q and not q.startswith("(rules)"):
+    if q and q != RULES_QUESTION and not q.startswith("(rules)"):
         return q
     return r["cliffhanger"]
 

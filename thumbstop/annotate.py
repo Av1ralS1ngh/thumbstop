@@ -161,6 +161,11 @@ def _heat(b: Beat) -> float:
     return s
 
 
+# Offline mode has no AI, so it says so plainly instead of pretending to explain the pick.
+RULES_WHY = "A charged opening line or action, found by simple keyword rules (offline mode, no AI)."
+RULES_QUESTION = "What happens next?"
+
+
 def rules_annotation(ep: Episode) -> EpisodeAnnotation:
     units = ep.cut_units
     sfx = [b for b in ep.beats if b.kind == "sfx"]
@@ -173,7 +178,7 @@ def rules_annotation(ep: Episode) -> EpisodeAnnotation:
         htype = next((t for rx, t in HOOK_TYPES if rx.search(b.text)), "other")
         if h >= 1.5:
             hooks.append((h - 0.7 * needs, HookPick(beat_id=b.id, strength=min(3, 1 + int(h // 2)), type=htype,
-                                                     needs_context=needs, why="intense line/action (rules)")))
+                                                     needs_context=needs, why=RULES_WHY)))
         c = 0.0
         c += 1.5 if b.text.rstrip().endswith("?") else 0.0
         c += 1.0 if re.search(r"\b(will|before|unless|or else|never|tonight|tomorrow|who)\b", b.text, re.I) else 0.0
@@ -183,12 +188,12 @@ def rules_annotation(ep: Episode) -> EpisodeAnnotation:
         nxt = units[i + 1] if i + 1 < len(units) else None
         if c >= 1.5 and (nxt is None or nxt.t0 - b.t1 >= -0.2):
             cliffs.append((c, CliffPick(beat_id=b.id, strength=min(3, 1 + int(c // 1.5)), type="other",
-                                         open_question="(rules) what happens next?")))
+                                         open_question=RULES_QUESTION)))
     hooks.sort(key=lambda x: -x[0])
     cliffs.sort(key=lambda x: -x[0])
     if not cliffs and units:
         last = units[-1]
-        cliffs = [(0, CliffPick(beat_id=last.id, strength=1, type="other", open_question="(rules) episode end"))]
+        cliffs = [(0, CliffPick(beat_id=last.id, strength=1, type="other", open_question=RULES_QUESTION))]
     roles = []
     for lab in sorted({b.speaker for b in ep.beats if b.speaker}):
         g = "F" if re.search(r"\b(LADY|WOMAN|MAID|DUCHESS|MOTHER|SISTER|QUEEN|GIRL|WIFE|MATRIARCH|BRIDE|AUNT|"

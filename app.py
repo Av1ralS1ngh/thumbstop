@@ -9,6 +9,7 @@ outputs live in a temporary folder that is deleted when the run ends; results st
 from __future__ import annotations
 
 import contextlib
+import gzip
 import html
 import io
 import json
@@ -23,11 +24,11 @@ from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
 
-from thumbstop.llm import Budget, Router, load_config
+from thumbstop.llm import Budget, BudgetExceeded, Router, load_config
 from thumbstop.models import fmt_ts
 from thumbstop.pipeline import Options, run
 
-RECORDED = "Recorded AI run on the demo (Claude Opus 4.6 + GPT-OSS-120B, no key)"
+RECORDED = "Recorded AI run (Claude Opus 4.6 + GPT-OSS-120B, no key)"
 OFFLINE = "Offline (rules only, no key)"
 BEDROCK = "AWS Bedrock (your AWS credentials)"
 CUSTOM = "Any OpenAI-compatible API"
@@ -38,6 +39,28 @@ OUTPUTS = {"promos.csv": "text/csv", "promos.json": "application/json", "selects
 MAX_FILES, MAX_UNZIPPED = 1000, 200 * 1024 * 1024
 EPISODE_SUFFIXES = (".txt", ".srt", ".vtt")   # same formats the CLI reads
 DEMO_ANSWERS = Path(__file__).resolve().parent / "demo_answers.json"   # written by record_demo.py
+# Optional extra recorded answers kept outside the repo (on the hosted server: the assignment's input pack).
+# Each answer is looked up by a hash of its prompt, which contains the script text, so only someone who
+# uploads those exact scripts can replay them.
+EXTRA_ANSWERS = os.environ.get("THUMBSTOP_RECORDED_ANSWERS", "")
+
+
+class NotRecorded(ValueError):
+    """The recorded mode met a question it has no answer for, and it never makes a live call."""
+
+
+def has_extra_answers() -> bool:
+    return bool(EXTRA_ANSWERS) and Path(EXTRA_ANSWERS).is_file()
+
+
+def recorded_answers() -> dict[str, str]:
+    """The demo answers plus the optional extra file (.json or .json.gz)."""
+    answers = json.loads(DEMO_ANSWERS.read_text(encoding="utf-8")) if DEMO_ANSWERS.exists() else {}
+    if has_extra_answers():
+        opener = gzip.open if EXTRA_ANSWERS.endswith(".gz") else open
+        with opener(EXTRA_ANSWERS, "rt", encoding="utf-8") as f:
+            answers |= json.load(f)
+    return answers
 
 
 def recorded_options() -> Options:
@@ -260,10 +283,18 @@ def execute(mode: str, env: dict[str, str | None], opt: Options, zip_bytes: byte
                 import diskcache
 
                 with diskcache.Cache(str(router.cache_dir)) as cache:
-                    for k, v in json.loads(DEMO_ANSWERS.read_text(encoding="utf-8")).items():
+                    for k, v in recorded_answers().items():
                         cache.set(k, v)
             same_family = mode != OFFLINE and router["annotate"].family == router["gate"].family
-            run(folder, out, router, opt, log=log)
+            try:
+                run(folder, out, router, opt, log=log)
+            except BudgetExceeded as e:
+                if mode != RECORDED:
+                    raise
+                raise NotRecorded(
+                    "There is no recorded AI run for these scripts, and this mode never calls a model live. "
+                    "Pick Offline (rules only) in the sidebar to try them with no key, or pick AWS Bedrock or "
+                    "another API and bring your own key.") from e
         return {"doc": json.loads((out / "promos.json").read_text(encoding="utf-8")), "same_family": same_family,
                 "files": {name: (out / name).read_bytes() for name in OUTPUTS}}
 
@@ -460,9 +491,11 @@ def sidebar() -> tuple[str, dict[str, str | None], Options] | None:
     mode = sb.radio("Model", modes, label_visibility="collapsed", key="mode")
     env: dict[str, str | None] = {}
     if mode == RECORDED:
-        sb.caption("The real pipeline runs every step live, on answers Claude Opus 4.6 and GPT-OSS-120B gave for the "
-                   "demo show in a recorded run, so it works with no key. It covers the demo show at default settings. "
-                   "To run your own scripts, pick AWS Bedrock or another API.")
+        covers = ("the demo show, and the assignment's input pack if you upload its zip as it was sent"
+                  if has_extra_answers() else "the demo show")
+        sb.caption("Every step of the pipeline runs for real, but the model answers are replayed from a recorded run of "
+                   f"Claude Opus 4.6 and GPT-OSS-120B, so it needs no key and never calls a model. It covers {covers}, "
+                   "at the default settings. For other scripts, pick a model below.")
     elif mode == BEDROCK:
         roles = load_config().get("roles", {})
         sb.caption("Uses the roles in config.yaml: " + ", ".join(f"{r}={p}" for r, p in roles.items()))
@@ -567,9 +600,15 @@ def main() -> None:
         upload = None
         if source == UPLOAD:
             upload = st.file_uploader("Episode files (.zip of .txt screenplays, .srt or .vtt)", type=["zip"], key="upload")
+        recorded_upload_ok = has_extra_answers()
         if settings is not None and settings[0] == RECORDED and source == UPLOAD:
-            st.info("The recorded AI run only covers the demo show. Pick a model in the sidebar to run your own scripts.")
-        ready = settings is not None and (source == DEMO or (upload is not None and settings[0] != RECORDED))
+            if recorded_upload_ok:
+                st.caption("The recorded AI run covers the assignment's input pack: upload its zip as it was sent. "
+                           "For any other scripts, pick a model in the sidebar.")
+            else:
+                st.info("The recorded AI run only covers the demo show. Pick a model in the sidebar to run your own scripts.")
+        ready = settings is not None and (source == DEMO or (upload is not None and (settings[0] != RECORDED
+                                                                                    or recorded_upload_ok)))
         clicked = st.button("Find promos", type="primary", disabled=not ready, key="run")
     # ?demo=1 runs the demo once on arrival, so a shared link opens straight onto results
     auto = (st.query_params.get("demo") == "1" and source == DEMO and ready
@@ -594,6 +633,9 @@ def main() -> None:
             try:
                 st.session_state["result"] = execute(mode, env, opt, upload.getvalue() if upload else None, name, log)
                 status.update(label="Done", state="complete", expanded=False)
+            except NotRecorded as e:
+                status.update(label="No recorded run for these scripts", state="error", expanded=False)
+                st.warning(str(e))
             except (Exception, SystemExit) as e:   # pipeline exits with SystemExit on an empty episode range
                 status.update(label="Run failed", state="error", expanded=True)
                 st.error(f"{type(e).__name__}: {str(e)[:500]}")

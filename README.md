@@ -19,6 +19,8 @@ open runs/myshow/review.html                                               # cut
 streamlit run app.py                                                       # the web app
 # open http://localhost:8501/?demo=1 to run the built-in demo show on arrival
 .venv/bin/python record_demo.py   # re-record the AI answers the app replays for its demo show (no-key mode)
+# THUMBSTOP_RECORDED_ANSWERS=/path/answers.json.gz adds more recorded answers (kept outside the repo); they only
+# replay for someone who uploads the exact scripts they were recorded on, since each is keyed by a hash of its prompt
 ```
 
 Outputs in `--out`: `promos.json` and `promos.csv` (rank, episode, start/end of every segment, hook, cliffhanger,

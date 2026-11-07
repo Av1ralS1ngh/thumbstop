@@ -44,6 +44,29 @@ def test_recorded_ai_demo_replays_with_no_key_or_network(monkeypatch):
     assert "opus" in str(doc["meta"]["models"]) and all("(rules)" not in (r["why_it_works"] or "") for r in doc["promos"])
 
 
+def test_recorded_mode_reads_an_extra_gz_file_and_refuses_unrecorded_scripts(monkeypatch, tmp_path):
+    import gzip
+    import json
+
+    monkeypatch.setenv("AWS_PROFILE", "no-such-profile")
+    app = _load_app_module()
+    extra = tmp_path / "extra.json.gz"
+    with gzip.open(extra, "wt", encoding="utf-8") as f:
+        json.dump(json.loads(app.DEMO_ANSWERS.read_text(encoding="utf-8")), f)
+    monkeypatch.setattr(app, "DEMO_ANSWERS", tmp_path / "missing.json")   # so every answer must come from the gz
+    monkeypatch.setattr(app, "EXTRA_ANSWERS", str(extra))
+    assert app.has_extra_answers()
+    res = app.execute(app.RECORDED, {}, app.recorded_options(), None, app.DEMO_NAME, lambda m: None)
+    assert res["doc"]["promos"] and res["doc"]["meta"]["usage"]["calls"] == 0
+
+    buf = io.BytesIO()   # scripts with no recorded answers: a clear message, never a live call or a rules run
+    with zipfile.ZipFile(buf, "w") as zf:
+        for p in sorted((APP.parent / "tests" / "fixtures" / "new_show").glob("*.txt")):
+            zf.write(p, p.name)
+    with pytest.raises(app.NotRecorded, match="no recorded AI run"):
+        app.execute(app.RECORDED, {}, app.recorded_options(), buf.getvalue(), "other", lambda m: None)
+
+
 def test_offline_demo_run_shows_ranked_table():
     at = _run_demo("Offline")
     assert not at.exception, [e.value for e in at.exception]
