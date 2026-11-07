@@ -594,7 +594,9 @@ def main() -> None:
     st.html(HERO)
     settings = sidebar()
 
-    section("Try it", "Pick the scripts", "The demo is a short original show, so it runs in seconds with no key.")
+    section("Try it", "Pick the scripts", "The demo is a short original show, so it runs in seconds with no key. "
+            + ("Have the assignment's input pack? Upload its zip to replay the real AI run on all 50 episodes, also with "
+               "no key." if has_extra_answers() else ""))
     with st.container(key="ts_input"):
         source = st.radio("Scripts", [DEMO, UPLOAD], horizontal=True, key="source", label_visibility="collapsed")
         upload = None
