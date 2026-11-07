@@ -22,3 +22,6 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .DS_Store
+
+# agent worktrees / local tooling
+.claude/
