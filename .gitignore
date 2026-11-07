@@ -28,3 +28,4 @@ __pycache__/
 
 # the solution doc mentions episodes/scenes of the confidential show - submitted as PDF, never pushed
 docs/solution_doc*
+docs/INTERVIEW_PREP.md
