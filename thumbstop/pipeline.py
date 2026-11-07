@@ -15,7 +15,7 @@ from .llm import BudgetExceeded, LLMError, Router
 from .parse import ingest_report, parse_show
 from .rank import final_score, policy_status, post_first, select, spoiler_note
 from .baselines import proposed
-from .search import MAX_LEN, MIN_LEN, Promo, anchored_candidates, assign_ids, best_per_moment, validate
+from .search import CONTEXT_MIN_LEN, CONTEXT_TIGHT_PENALTY, MAX_LEN, MIN_LEN, Promo, anchored_candidates, assign_ids, best_per_moment, validate
 
 
 @dataclass
@@ -148,8 +148,10 @@ def seed_candidates(show, anns, llm, opt: Options, log=print) -> list[Promo]:
         p.needs_context = h.needs_context if h else 1
         p.hook_type, p.cliff_type = (h.type if h else "other"), (c.type if c else "other")
         p.open_question = c.open_question if c else ""
-        p.score = round(100 * (0.37 * p.hook_strength / 3 + 0.37 * p.cliff_strength / 3 - 0.2 * p.needs_context / 3
-                               + 0.08), 2)
+        p.score = 100 * (0.37 * p.hook_strength / 3 + 0.37 * p.cliff_strength / 3 - 0.2 * p.needs_context / 3 + 0.08)
+        if p.needs_context >= 1 and p.duration < CONTEXT_MIN_LEN:   # same rule as anchored search
+            p.score -= CONTEXT_TIGHT_PENALTY * p.needs_context
+        p.score = round(p.score, 2)
         p.variant = "full"
         out.append(p)
     return out
