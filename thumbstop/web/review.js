@@ -1,7 +1,7 @@
 /* Thumbstop review desk: one component for the hosted app's results and the standalone review.html.
    ThumbstopReview.mount(element, view, {standalone, downloads}) renders from the JSON that export.review_data writes.
    The phone is an animatic: there is no footage, so it plays the script at its real timings, with the shot as the
-   picture, the dialogue as captions, and (optionally) the lines read aloud by the browser's own on-device voices. */
+   picture, the dialogue as captions, and a trailer-style score and sound effects made in the browser. */
 (function () {
   "use strict";
 
@@ -15,49 +15,6 @@
   };
   const hash = (s) => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
   const HUES = [24, 32, 40, 14, 200, 212, 352, 28];
-
-  // ---------------------------------------------------------------- voices (on-device only)
-  // Only voices the operating system runs locally are used, so no script text is sent anywhere.
-  const FEMALE_V = /samantha|karen|moira|tessa|fiona|victoria|allison|ava|susan|zira|serena|kate|veena|catherine|martha|nicky|zoe|joelle|flo|sandy|shelley|kathy|jenny|aria|libby|sonia|emma|olivia|isha/i;
-  const MALE_V = /daniel|alex|fred|rishi|tom|oliver|aaron|arthur|david|mark|george|gordon|lee|reed|ralph|eddy|rocko|junior|guy|ryan|thomas|james|brian|christopher|eric|evan|nathan/i;
-  const FEMALE_ROLE = /\b(lady|woman|maid|duchess|mother|sister|queen|girl|wife|matriarch|bride|aunt|daughter|miss|mrs|nurse|princess|grandmother|madam|mistress|countess)\b/i;
-  const Voices = {
-    list: [], ready: false, subs: new Set(), inited: false,
-    init() {
-      if (this.inited || !("speechSynthesis" in window)) return;
-      this.inited = true;
-      const load = () => {
-        this.list = speechSynthesis.getVoices().filter((v) => v.localService && /^en([-_]|$)/i.test(v.lang));
-        this.ready = this.list.length > 0;
-        this.subs.forEach((f) => f());
-      };
-      load();
-      speechSynthesis.addEventListener ? speechSynthesis.addEventListener("voiceschanged", load) : (speechSynthesis.onvoiceschanged = load);
-    },
-    enabled() { return this.ready && store.get("tsr-voices", false); },
-    set(v) { store.set("tsr-voices", !!v); if (!v) this.stop(); },
-    pick(who, g) {
-      const female = g === "F" || (g !== "M" && FEMALE_ROLE.test(who));
-      let pool = this.list.filter((v) => (female ? FEMALE_V : MALE_V).test(v.name));
-      if (!pool.length) pool = this.list;
-      const h = hash(who);
-      return { voice: pool[h % pool.length], pitch: (female ? 1.02 : 0.9) + ((h >> 5) % 13) / 100 };
-    },
-    say(item, slot, speed) {
-      if (!this.enabled()) return;
-      const words = item.text.split(/\s+/).length;
-      const fit = Math.min(1.6, Math.max(0.95, words / 2.8 / Math.max(0.7, slot)));
-      const u = new SpeechSynthesisUtterance(item.text);
-      const p = this.pick(item.who || "", item.g);
-      if (p.voice) u.voice = p.voice;
-      u.pitch = p.pitch;
-      u.rate = Math.min(2.4, fit * speed);
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
-    },
-    stop() { if ("speechSynthesis" in window) speechSynthesis.cancel(); },
-  };
-
 
   // ---------------------------------------------------------------- sound: a small trailer score, made in the browser
   // No samples and no outside service. A low drone tightens toward the end, cuts whoosh, the hook lands on a hit, a
@@ -206,7 +163,6 @@
   <span class="tsr-time"><b>0:00</b> <span>/ ${mm(dur)}</span></span><span class="tsr-grow"></span>
   <button class="tsr-pill tsr-rate" type="button" title="Playback speed">1×</button>
   <button class="tsr-ico tsr-sound" type="button" aria-pressed="true" aria-label="Score and sound effects"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4.2-3.2v11.4L6 12.5H3z" fill="currentColor"/><path class="on" d="M13.2 7.4a3.6 3.6 0 0 1 0 5.2M15.4 5.2a6.8 6.8 0 0 1 0 9.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="off" d="M13 7.5l4.6 5M17.6 7.5L13 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
-  <button class="tsr-ico tsr-voice" type="button" aria-pressed="false" hidden aria-label="Read the lines aloud"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.2 4h11.6c.9 0 1.7.8 1.7 1.7v6.6c0 .9-.8 1.7-1.7 1.7H9.4L5.6 17v-3H4.2c-.9 0-1.7-.8-1.7-1.7V5.7C2.5 4.8 3.3 4 4.2 4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path class="on" d="M6.4 8h7.2M6.4 10.6h4.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path class="off" d="M3 3l14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
 </div>`;
   }
 
@@ -218,7 +174,7 @@
     const cap = $(".ph-cap"), whoEl = $(".ph-who"), lineEl = $(".ph-line"), bHook = $(".ph-badge.hook"), bCliff = $(".ph-badge.cliff");
     const cutEl = $(".ph-cutcard"), ring = $(".ph-ring"), ringFg = $(".ph-ring .fg"), bar = $(".ph-bar i");
     const scrub = $(".tsr-scrub"), fill = $(".sc-fill"), knob = $(".sc-knob"), playBtn = $(".tsr-play"), timeEl = $(".tsr-time b");
-    const rateBtn = $(".tsr-rate"), voiceBtn = $(".tsr-voice"), soundBtn = $(".tsr-sound");
+    const rateBtn = $(".tsr-rate"), soundBtn = $(".tsr-sound");
     const snd = () => !hooks.mute && Sound.enabled() && !!Sound.ready();
     const hookItem = D.find((x) => x.hook), cliffItem = D.find((x) => x.cliff);
     const stops = D.filter((x) => x.k === "dialogue" || x.k === "action" || x.k === "cut").map((x) => x.t);
@@ -290,7 +246,6 @@
           cap.classList.remove("off");
           cap.classList.toggle("is-hook", !!line.hook);
           cap.classList.toggle("is-cliff", !!line.cliff);
-          if (on && t - line.t < 0.5 && !hooks.mute) Voices.say(line, nextStart(line) - line.t, rate);
         } else cap.classList.add("off");
       }
       if (line) {
@@ -339,14 +294,14 @@
     function pause() {
       on = false; cancelAnimationFrame(raf);
       phone.classList.remove("playing"); playBtn.classList.remove("on"); playBtn.setAttribute("aria-label", "Play");
-      kenBurns(false); Voices.stop(); if (!hooks.mute) Sound.stopDrone(false);
+      kenBurns(false); if (!hooks.mute) Sound.stopDrone(false);
     }
     function end() { const s = snd(); pause(); if (s) Sound.braam(); phone.classList.add("ended"); hooks.onEnd && hooks.onEnd(); }
     function seek(nt, keepPlaying = true) {
       t = Math.max(0, Math.min(dur - 0.01, nt));
       phone.classList.remove("ended");
       if (!started) { started = true; phone.classList.add("started"); }
-      curLine = undefined; Voices.stop();
+      curLine = undefined;
       draw();
       if (!keepPlaying) pause();
     }
@@ -365,15 +320,7 @@
     rateBtn.addEventListener("click", () => {
       rate = rate === 1 ? 1.5 : rate === 1.5 ? 2 : 1;
       rateBtn.textContent = rate + "×";
-      if (on) Voices.stop();
     });
-    const paintVoice = () => {
-      voiceBtn.hidden = !Voices.ready;
-      voiceBtn.setAttribute("aria-pressed", String(Voices.enabled()));
-      voiceBtn.title = Voices.enabled() ? "Voices on: lines read aloud by your device's own voices" : "Voices off (click to read the lines aloud)";
-    };
-    voiceBtn.addEventListener("click", () => { Voices.set(!Voices.enabled()); paintVoice(); });
-    Voices.subs.add(paintVoice); paintVoice();
     const paintSound = () => {
       soundBtn.setAttribute("aria-pressed", String(Sound.enabled()));
       soundBtn.title = Sound.enabled() ? "Sound on: a trailer-style score and effects, made in your browser" : "Sound off";
@@ -399,7 +346,7 @@
     return {
       play, pause, toggle, seek, step,
       get playing() { return on; },
-      destroy() { pause(); Voices.subs.delete(paintVoice); Sound.subs.delete(paintSound); },
+      destroy() { pause(); Sound.subs.delete(paintSound); },
     };
   }
 
@@ -418,7 +365,6 @@
 
   function mount(root, view, opts) {
     opts = opts || {};
-    Voices.init();
     const P = view.promos || [];
     const byId = Object.fromEntries(P.map((p) => [p.id, p]));
     const firsts = P.filter((p) => p.first);
@@ -750,5 +696,5 @@
     return pl;
   }
 
-  window.ThumbstopReview = { mount, teaser, Voices, Sound };
+  window.ThumbstopReview = { mount, teaser, Sound };
 })();
