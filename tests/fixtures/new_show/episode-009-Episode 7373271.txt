@@ -1,0 +1,168 @@
+EPISODE NUMBER: Episode 9
+EPISODE LOGLINE: Priya lies in a coma, Grant attacks Nadia in a parking garage, and the transfer orders carry a shocking name.
+CONTINUITY NOTES: Picking up at the Episode 8 cliffhanger: Priya's car is hit mid-sentence.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. ST. BRIGID HOSPITAL – ICU – NIGHT
+Scene start: 00:00.00
+Scene end: 00:25.58
+
+Actions and dialogue:
+
+**CAMERA**:
+
+Start: (00:00.00) | End: (00:02.40)
+Monitors beep over Priya's bandaged, unconscious face.
+
+**DOCTOR (Grave)**:
+
+Start: (00:00.00) | End: (00:04.20)
+"She's in a coma. Whoever hit her didn't even brake."
+
+**NADIA (Guilty, Shaking)**:
+
+Start: (00:04.60) | End: (00:08.80)
+"She was coming to meet me. This is my fault."
+
+**THEO (Firm)**:
+
+Start: (00:09.20) | End: (00:13.06)
+"It's Grant's fault. And he just made a mistake."
+
+**ACTION**:
+
+Start: (00:13.46) | End: (00:17.26)
+A nurse hands Nadia a muddy envelope recovered from Priya's car.
+
+**NURSE (Kind)**:
+
+Start: (00:17.56) | End: (00:22.78)
+"The paramedics found this under her seat. It has your name on it."
+
+**CAMERA**:
+
+Start: (00:23.18) | End: (00:25.58)
+Close-up on the envelope: FOR NADIA, ORIGINALS.
+
+SCENE 02
+Scene heading: INT. ST. BRIGID HOSPITAL – PARKING GARAGE – NIGHT
+Scene start: 00:23.18
+Scene end: 01:05.98
+
+Actions and dialogue:
+
+**CAMERA**:
+
+Start: (00:23.18) | End: (00:25.58)
+Flickering fluorescent tubes over rows of cars.
+
+**ACTION**:
+
+Start: (00:23.18) | End: (00:27.18)
+Nadia walks alone toward her car, the envelope pressed to her chest.
+
+**SOUND FX**:
+
+Start: (00:27.48) | End: (00:29.48)
+Footsteps echo behind her.
+
+**ACTION**:
+
+Start: (00:27.48) | End: (00:32.08)
+Grant steps out from behind a pillar and shoves Nadia hard against a car door.
+
+**GRANT (Menacing)**:
+
+Start: (00:32.38) | End: (00:36.92)
+"Give me the envelope and you might live to see Friday."
+
+**NADIA (Defiant, Gasping)**:
+
+Start: (00:37.32) | End: (00:41.18)
+"Like Priya lived? You ran her off the road!"
+
+**GRANT (Cold)**:
+
+Start: (00:41.58) | End: (00:44.76)
+"Priya drove badly. Accidents are contagious, Nadia."
+
+**ACTION**:
+
+Start: (00:45.16) | End: (00:48.76)
+Grant grabs the envelope and wrenches it from her hands.
+
+**SOUND FX**:
+
+Start: (00:49.06) | End: (00:51.06)
+A car horn blares as headlights flood the garage.
+
+**ACTION**:
+
+Start: (00:49.06) | End: (00:53.46)
+Theo's car screeches to a stop; Theo leaps out and drags Grant off her.
+
+**THEO (Furious)**:
+
+Start: (00:53.76) | End: (00:57.28)
+"Touch her again and I'll bury you myself!"
+
+**ACTION**:
+
+Start: (00:57.68) | End: (01:01.48)
+Grant drops the envelope and backs away into the dark, smiling.
+
+**GRANT (Taunting)**:
+
+Start: (01:01.78) | End: (01:05.98)
+"Open it, heir. You won't like whose name is inside."
+
+SCENE 03
+Scene heading: INT. THEO'S CAR – NIGHT
+Scene start: 01:06.38
+Scene end: 01:25.04
+
+Actions and dialogue:
+
+**CAMERA**:
+
+Start: (01:06.38) | End: (01:08.78)
+The dome light is on; Nadia and Theo lean over the papers.
+
+**ACTION**:
+
+Start: (01:06.38) | End: (01:09.78)
+Nadia flips to the last transfer order and freezes.
+
+**NADIA (Whispering, Horrified)**:
+
+Start: (01:10.08) | End: (01:13.94)
+"Theo. Every transfer was signed by the same person."
+
+**THEO (Uneasy)**:
+
+Start: (01:14.34) | End: (01:15.48)
+"Grant?"
+
+**NADIA (Trembling)**:
+
+Start: (01:15.88) | End: (01:20.08)
+"Not Grant. Look at the signature. Do you recognize it?"
+
+**CAMERA**:
+
+Start: (01:20.48) | End: (01:22.88)
+Close-up on Theo's face draining of color.
+
+**THEO (Broken)**:
+
+Start: (01:20.48) | End: (01:22.64)
+"That's my father's signature."
+
+**SOUND FX**:
+
+Start: (01:23.04) | End: (01:25.04)
+Ominous sting. Cut to black.
+
+--- SCRIPT END ---

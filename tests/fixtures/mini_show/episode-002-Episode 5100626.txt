@@ -1,0 +1,62 @@
+EPISODE NUMBER: Episode 2
+EPISODE LOGLINE: In the tower, Asha learns the regent will trade the antidote for her confession.
+CONTINUITY NOTES: Picking up at the Episode 1 cliffhanger: Asha is dragged to the tower.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. EMBER CITADEL – TOWER CELL – NIGHT
+Scene start: 00:00.00
+Scene end: 00:40.20
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:02.40)
+Moonlight through a slit window.
+
+**ACTION:**
+Start: (00:00.00) | End: (00:04.20)
+Asha paces the cell, grinding herbs from her sleeve on the stone floor.
+
+**GUARD (Gruff):**
+Start: (00:04.50) | End: (00:08.36)
+"Save your herbs, healer. The gallows don't need medicine."
+
+**ASHA (Pleading):**
+Start: (00:08.76) | End: (00:12.96)
+"The queen is dying. One antidote, that's all I ask."
+
+**SOUND FX:**
+Start: (00:13.36) | End: (00:15.36)
+A key turns in the lock.
+
+**ACTION:**
+Start: (00:13.36) | End: (00:16.76)
+Regent Corvin enters alone, holding a small black vial.
+
+**CORVIN (Smooth):**
+Start: (00:17.06) | End: (00:21.26)
+"Confess to the poisoning, and the queen gets your antidote."
+
+**ASHA (Defiant):**
+Start: (00:21.66) | End: (00:24.84)
+"You poisoned her yourself. She said so!"
+
+**CORVIN (Cruel):**
+Start: (00:25.24) | End: (00:29.10)
+"A dying girl's ramblings. Who will believe a witch?"
+
+**ACTION:**
+Start: (00:29.50) | End: (00:33.30)
+Corvin tips the black vial over the candle flame; it hisses.
+
+**CORVIN (Chilling):**
+Start: (00:33.60) | End: (00:37.80)
+"Choose before the candle burns out. Her life or yours?"
+
+**SOUND FX:**
+Start: (00:38.20) | End: (00:40.20)
+Ominous swell.
+
+--- SCRIPT END ---

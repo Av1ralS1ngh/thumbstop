@@ -1,0 +1,121 @@
+﻿EPISODE NUMBER: Episode 10
+EPISODE LOGLINE: On Friday Nadia exposes the scheme before the shareholders and Grant is arrested, but the chairman has a plan.
+CONTINUITY NOTES: Picking up at the Episode 9 cliffhanger: the transfer orders carry Arthur Kellan's signature.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. MERIDIAN CREST TOWER – AUDITORIUM – DAY
+Scene start: 00:00.00
+Scene end: 00:53.02
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:02.40)
+Three hundred shareholders fill an auditorium; Arthur stands at the podium.
+
+**ARTHUR (Commanding):**
+Start: (00:00.00) | End: (00:04.88)
+"It's Friday, Miss Okonjo. Show us your ledger, or leave in handcuffs."
+
+**ACTION:**
+Start: (00:05.28) | End: (00:09.48)
+Nadia walks onto the stage and plugs the USB into the presentation laptop.
+
+**NADIA (Steady):**
+Start: (00:09.78) | End: (00:14.32)
+"Forty-eight million dollars, stolen from the people who built this company."
+
+**CAMERA:**
+Start: (00:14.72) | End: (00:17.12)
+The giant screen fills with transfer orders and Halcyon Bay bank statements.
+
+**NADIA (Cold, Accusing):**
+Start: (00:14.72) | End: (00:20.62)
+"Grant Voss moved the money. Selene March hid it. Priya Desai nearly died for knowing."
+
+**GRANT (Shouting):**
+Start: (00:21.02) | End: (00:24.88)
+"Lies! This is a forgery by a convicted thief!"
+
+**ACTION:**
+Start: (00:25.28) | End: (00:29.48)
+Selene stands up in the third row, mascara streaked, holding up her phone.
+
+**SELENE (Defiant):**
+Start: (00:29.78) | End: (00:35.34)
+"It's real. I recorded every call he made. Including the one about Priya's car."
+
+**GRANT (Enraged):**
+Start: (00:35.74) | End: (00:37.56)
+"You treacherous little—"
+
+**SOUND FX:**
+Start: (00:37.96) | End: (00:39.96)
+Doors bang open; police officers file down the aisle.
+
+**OFFICER (Formal):**
+Start: (00:37.96) | End: (00:42.50)
+"Grant Voss, you are under arrest for fraud and attempted murder."
+
+**ACTION:**
+Start: (00:42.90) | End: (00:47.50)
+Officers twist Grant's arms behind his back and march him out as the crowd films.
+
+**GRANT (Shouting, Furious):**
+Start: (00:47.80) | End: (00:53.02)
+"You think I built this alone? Ask the chairman who signed the orders!"
+
+SCENE 02
+Scene heading: INT. MERIDIAN CREST TOWER – CHAIRMAN'S OFFICE – DAY
+Scene start: 00:53.42
+Scene end: 01:32.34
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:53.42) | End: (00:55.82)
+Arthur pours two glasses of whisky by the window.
+
+**THEO (Furious):**
+Start: (00:53.42) | End: (00:57.28)
+"You signed every transfer, Dad. Your own pension fund."
+
+**ARTHUR (Calm):**
+Start: (00:57.68) | End: (01:04.60)
+"I signed what Grant put in front of me. Now Grant is gone, and the board loves her."
+
+**ACTION:**
+Start: (01:05.00) | End: (01:08.40)
+Arthur turns to Nadia and holds out a glass.
+
+**ARTHUR (Smiling, Chilling):**
+Start: (01:08.70) | End: (01:12.56)
+"I need a new CFO. One the shareholders trust."
+
+**NADIA (Wary):**
+Start: (01:12.96) | End: (01:15.46)
+"And if I say no?"
+
+**ARTHUR (Menacing):**
+Start: (01:15.86) | End: (01:21.42)
+"Then the sugar tin at your mother's apartment becomes very interesting to the police."
+
+**CAMERA:**
+Start: (01:21.82) | End: (01:24.22)
+Close-up on Nadia; the color drains from her face.
+
+**NADIA (Whispering):**
+Start: (01:21.82) | End: (01:25.34)
+"How do you know about the sugar tin?"
+
+**ARTHUR (Deadly calm):**
+Start: (01:25.74) | End: (01:29.94)
+"Welcome to the family business, Nadia. You'll never leave it."
+
+**SOUND FX:**
+Start: (01:30.34) | End: (01:32.34)
+Ominous sting. Cut to black.
+
+--- SCRIPT END ---

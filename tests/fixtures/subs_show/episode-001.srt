@@ -1,0 +1,67 @@
+1
+00:00:04,700 --> 00:00:10,260
+NADIA: Mr. Voss, four million dollars left the pension fund last night. I traced it.
+
+2
+00:00:10,660 --> 00:00:14,520
+GRANT: Not here, Miss Okonjo. Smile. The board is watching.
+
+3
+00:00:14,920 --> 00:00:19,800
+NADIA: Then let them watch. The transfer has your approval code on it.
+
+4
+00:00:24,900 --> 00:00:29,440
+GRANT: Everyone! Our junior auditor has been stealing from the pension fund!
+
+5
+00:00:29,840 --> 00:00:31,840
+[The music cuts out. A glass shatters on the marble floor.]
+
+6
+00:00:29,840 --> 00:00:34,380
+NADIA: That's a lie! I found the theft, I didn't commit it!
+
+7
+00:00:40,080 --> 00:00:45,300
+SELENE: Ten years of friendship, Nadia, and you rob the people who fed you?
+
+8
+00:00:45,700 --> 00:00:50,240
+NADIA: Selene... you know me. You know I would never do this.
+
+9
+00:00:50,640 --> 00:00:53,820
+GRANT: Security! Get her out of my building!
+
+10
+00:00:59,320 --> 00:01:01,320
+[Camera shutters click like rain.]
+
+11
+00:01:04,220 --> 00:01:07,400
+NADIA: Twenty years of trust. What a joke.
+
+12
+00:01:13,500 --> 00:01:18,720
+THEO: You weren't wrong about the four million. It was only the first transfer.
+
+13
+00:01:19,120 --> 00:01:23,320
+NADIA: Who are you? Why would the IT guy know that?
+
+14
+00:01:23,720 --> 00:01:29,280
+THEO: Because I copied his private ledger before he wiped it. There are eleven more.
+
+15
+00:01:29,680 --> 00:01:32,520
+NADIA: Then give it to the police!
+
+16
+00:01:32,920 --> 00:01:39,500
+THEO: The police chief was at that gala. Server room, before midnight, or the backups are gone forever.
+
+17
+00:01:39,900 --> 00:01:41,900
+[An ominous sting as the tower lights go dark floor by floor.]

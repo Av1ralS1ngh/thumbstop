@@ -1,0 +1,132 @@
+EPISODE NUMBER: Episode 4
+EPISODE LOGLINE: Nadia tears up the confession, an anonymous bail payment frees her, and Theo admits who he really is.
+CONTINUITY NOTES: Picking up at the Episode 3 cliffhanger: Selene demands Nadia sign a confession before sunrise.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. CITY POLICE STATION – HOLDING CELL – DAWN
+Scene start: 00:00.00
+Scene end: 00:30.92
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:02.40)
+Grey dawn light through a barred window.
+
+**ACTION:**
+Start: (00:00.00) | End: (00:04.20)
+Nadia takes the confession, reads it once, and tears it slowly in half.
+
+**NADIA (Cold, Steady):**
+Start: (00:04.50) | End: (00:09.38)
+"Tell Grant he should have framed someone who can't read a ledger."
+
+**SELENE (Enraged):**
+Start: (00:09.78) | End: (00:13.64)
+"You stupid girl! You just made your mother homeless!"
+
+**ACTION:**
+Start: (00:14.04) | End: (00:18.24)
+Selene hurls the gold pen at the bars; it ricochets across the floor.
+
+**GUARD (Bored):**
+Start: (00:18.54) | End: (00:22.40)
+"Okonjo. Your bail's been paid. You're free to go."
+
+**SELENE (Stunned):**
+Start: (00:22.80) | End: (00:27.68)
+"Paid? By who? Two million in cash at six in the morning?"
+
+**GUARD (Shrugging):**
+Start: (00:28.08) | End: (00:30.92)
+"Anonymous. Above my pay grade, lady."
+
+SCENE 02
+Scene heading: EXT. CITY POLICE STATION – FRONT STEPS – DAWN
+Scene start: 00:31.32
+Scene end: 01:07.74
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:31.32) | End: (00:33.72)
+Wide shot; a black car idles at the curb.
+
+**ACTION:**
+Start: (00:31.32) | End: (00:35.12)
+Theo leans against the car, holding two paper cups of coffee.
+
+**NADIA (Suspicious):**
+Start: (00:35.42) | End: (00:38.94)
+"IT contractors don't have two million dollars, Theo."
+
+**THEO (Sheepish):**
+Start: (00:39.34) | End: (00:41.16)
+"No. They don't."
+
+**NADIA (Angry):**
+Start: (00:41.56) | End: (00:46.10)
+"Who are you really? Tell me right now or I walk."
+
+**THEO (Hesitant):**
+Start: (00:46.50) | End: (00:50.70)
+"My name is Theo Kellan. Kellan, as in Arthur Kellan."
+
+**NADIA (Shocked):**
+Start: (00:51.10) | End: (00:53.94)
+"The chairman? You're the chairman's son?"
+
+**THEO (Earnest):**
+Start: (00:54.34) | End: (00:59.90)
+"He doesn't know I'm working there. I needed to see who was robbing him."
+
+**NADIA (Bitter):**
+Start: (01:00.30) | End: (01:02.46)
+"So I'm your bait."
+
+**THEO (Pleading):**
+Start: (01:02.86) | End: (01:07.74)
+"You're my witness. And the only person in that tower I trust."
+
+SCENE 03
+Scene heading: INT. MERIDIAN CREST TOWER – CFO OFFICE – DAY
+Scene start: 01:08.14
+Scene end: 01:34.18
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (01:08.14) | End: (01:10.54)
+A wall of screens shows the gala video on every news channel.
+
+**ACTION:**
+Start: (01:08.14) | End: (01:13.14)
+Selene throws a tablet onto Grant's desk; on it, a photo of Nadia getting into Theo's car.
+
+**SELENE (Furious):**
+Start: (01:13.44) | End: (01:16.28)
+"She's out. And she isn't alone."
+
+**GRANT (Icy):**
+Start: (01:16.68) | End: (01:21.22)
+"That's the contractor from the server floor. Who paid her bail?"
+
+**SELENE (Nervous):**
+Start: (01:21.62) | End: (01:25.82)
+"Nobody will say. The money came from a family trust."
+
+**CAMERA:**
+Start: (01:26.22) | End: (01:28.62)
+Close-up on Grant zooming into Theo's face.
+
+**GRANT (Menacing):**
+Start: (01:26.22) | End: (01:31.78)
+"Find out who that man is. Tonight. Before he finds out who we are."
+
+**SOUND FX:**
+Start: (01:32.18) | End: (01:34.18)
+Ominous low drone. Cut to black.
+
+--- SCRIPT END ---

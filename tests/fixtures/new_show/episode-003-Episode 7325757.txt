@@ -1,0 +1,140 @@
+EPISODE NUMBER: Episode 3
+EPISODE LOGLINE: Theo's fire alarm gets Nadia out of the tower, but the police wait at her mother's door and Selene offers a deal.
+CONTINUITY NOTES: Picking up at the Episode 2 cliffhanger: Grant's flashlight finds Nadia's dress behind the rack.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. MERIDIAN CREST TOWER – SERVER ROOM – NIGHT
+Scene start: 00:00:00.00
+Scene end: 00:00:15.62
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00:00.00) | End: (00:00:02.40)
+The flashlight beam trembles on the hem of the black dress.
+
+**ACTION:**
+Start: (00:00:00.00) | End: (00:00:04.00)
+Theo slams his palm onto the fire alarm lever behind the rack.
+
+**SOUND FX:**
+Start: (00:00:04.30) | End: (00:00:06.30)
+The fire alarm blares; sprinklers burst on and water rains down.
+
+**GRANT (Furious):**
+Start: (00:00:04.30) | End: (00:00:07.82)
+"Stop! Whoever you are, I will find you!"
+
+**ACTION:**
+Start: (00:00:08.22) | End: (00:00:12.82)
+Nadia rips the USB from the terminal and sprints after Theo through the sprinkler spray.
+
+**THEO (Shouting):**
+Start: (00:00:13.12) | End: (00:00:15.62)
+"Stairs, not the elevator! Go!"
+
+SCENE 02
+Scene heading: INT. OKONJO FAMILY APARTMENT – KITCHEN – NIGHT
+Scene start: 00:00:16.02
+Scene end: 00:01:00.06
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00:16.02) | End: (00:00:18.42)
+A small, warm kitchen; a pot of pepper soup steams on the stove.
+
+**ACTION:**
+Start: (00:00:16.02) | End: (00:00:20.22)
+Nadia stumbles in soaked to the skin; her mother, Funmi, drops a ladle.
+
+**FUNMI (Worried):**
+Start: (00:00:20.52) | End: (00:00:25.74)
+"Nadia! The neighbors showed me a video. They are calling you a thief."
+
+**NADIA (Exhausted):**
+Start: (00:00:26.14) | End: (00:00:31.02)
+"Mama, it's not true. I can prove it now. I have proof."
+
+**FUNMI (Tender):**
+Start: (00:00:31.42) | End: (00:00:34.94)
+"I know my daughter. Sit. Eat something first."
+
+**SOUND FX:**
+Start: (00:00:35.34) | End: (00:00:37.34)
+Three heavy knocks on the door.
+
+**OFFICER (O.S.) (Commanding):**
+Start: (00:00:35.34) | End: (00:00:37.50)
+"Police! Open the door!"
+
+**ACTION:**
+Start: (00:00:37.90) | End: (00:00:42.50)
+Nadia shoves the USB into a sugar tin one second before the door bursts open.
+
+**OFFICER (Formal):**
+Start: (00:00:42.80) | End: (00:00:48.02)
+"Nadia Okonjo, you are under arrest for the theft of four million dollars."
+
+**FUNMI (Shouting, Desperate):**
+Start: (00:00:48.42) | End: (00:00:52.96)
+"No! She is a good girl! Take your hands off her!"
+
+**ACTION:**
+Start: (00:00:53.36) | End: (00:00:57.36)
+The officer twists Nadia's arms behind her back and snaps on handcuffs.
+
+**CAMERA:**
+Start: (00:00:57.66) | End: (00:01:00.06)
+Close-up on the sugar tin on the shelf.
+
+SCENE 03
+Scene heading: INT. CITY POLICE STATION – HOLDING CELL – NIGHT
+Scene start: 00:00:57.66
+Scene end: 00:01:32.70
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00:57.66) | End: (00:01:00.06)
+Fluorescent light flickers over a concrete bench.
+
+**ACTION:**
+Start: (00:00:57.66) | End: (00:01:02.46)
+Selene enters in a cream coat, holding a single sheet of paper and a gold pen.
+
+**SELENE (Sweet, Venomous):**
+Start: (00:01:02.76) | End: (00:01:06.62)
+"You look terrible. Prison grey was never your color."
+
+**NADIA (Cold):**
+Start: (00:01:07.02) | End: (00:01:11.22)
+"I saw your name on Halcyon Bay, Selene. Your signature."
+
+**SELENE (Mocking):**
+Start: (00:01:11.62) | End: (00:01:15.82)
+"Then you saw your own death warrant. Sign this confession."
+
+**NADIA (Defiant):**
+Start: (00:01:16.22) | End: (00:01:19.06)
+"Never. I'd rather rot in here."
+
+**SELENE (Threatening):**
+Start: (00:01:19.46) | End: (00:01:24.68)
+"Then your mother loses her apartment tomorrow. Grant bought the building this afternoon."
+
+**CAMERA:**
+Start: (00:01:25.08) | End: (00:01:27.48)
+Close-up on the gold pen, held out between the bars.
+
+**SELENE (Chilling):**
+Start: (00:01:25.08) | End: (00:01:30.30)
+"Sign before sunrise, or she sleeps on the street. What will it be?"
+
+**SOUND FX:**
+Start: (00:01:30.70) | End: (00:01:32.70)
+Ominous sting. Hold on Nadia's trembling hand.
+
+--- SCRIPT END ---

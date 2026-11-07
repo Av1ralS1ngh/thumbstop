@@ -1,0 +1,122 @@
+EPISODE NUMBER: Episode 2
+EPISODE LOGLINE: Nadia and Theo break into the server room to save the backups and overhear Grant ordering her silenced.
+CONTINUITY NOTES: Picking up at the Episode 1 cliffhanger: Theo gives Nadia a midnight deadline at the server room.
+
+--- SCRIPT START ---
+
+SCENE 01
+SCENE HEADING: INT. MERIDIAN CREST TOWER – SERVER ROOM – NIGHT
+SCENE START: 00:00.00
+SCENE END: 01:24.70
+
+ACTIONS AND DIALOGUE:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:02.40)
+Blue server lights blink in long rows; a wall clock reads 11:52.
+
+**ACTION:**
+Start: (00:00.00) | End: (00:04.80)
+Theo swipes a borrowed key card; the lock flashes green and Nadia slips in behind him.
+
+**NADIA (Whispering):**
+Start: (00:05.10) | End: (00:07.94)
+"Eight minutes. What happens at midnight?"
+
+**THEO (Focused):**
+Start: (00:08.34) | End: (00:12.54)
+"An automatic purge. Every backup older than one day disappears."
+
+**ACTION:**
+Start: (00:12.94) | End: (00:17.34)
+Theo plugs the USB into a terminal; columns of transfers scroll across the screen.
+
+**NADIA (Stunned):**
+Start: (00:17.64) | End: (00:22.18)
+"Twelve transfers. Forty-eight million dollars. All to the same shell company."
+
+**THEO (Grim):**
+Start: (00:22.58) | End: (00:26.44)
+"Halcyon Bay Holdings. Look who signed the incorporation papers."
+
+**CAMERA:**
+Start: (00:26.84) | End: (00:29.24)
+Close-up on the screen: a scanned signature beside the name SELENE MARCH.
+
+**NADIA (Betrayed, Shaking):**
+Start: (00:26.84) | End: (00:31.72)
+"Selene. She slapped me in front of everyone for her own crime."
+
+**SOUND FX:**
+Start: (00:32.12) | End: (00:34.12)
+The elevator chimes in the corridor outside.
+
+**ACTION:**
+Start: (00:32.12) | End: (00:36.32)
+Theo yanks Nadia down behind a server rack as the door swings open.
+
+**CAMERA:**
+Start: (00:36.62) | End: (00:39.02)
+Low angle on polished shoes stepping into the room.
+
+**GRANT (On phone, Cold):**
+Start: (00:36.62) | End: (00:41.50)
+"Yes, the girl is finished. Every newspaper runs the gala video tomorrow."
+
+**GRANT (Menacing):**
+Start: (00:41.90) | End: (00:46.78)
+"But she saw the pension numbers. Make sure the auditor never testifies."
+
+**NADIA (Terrified, Whispering):**
+Start: (00:47.18) | End: (00:49.68)
+"He's talking about killing me."
+
+**THEO (Whispering):**
+Start: (00:50.08) | End: (00:53.60)
+"Don't move. The download needs ninety more seconds."
+
+**ACTION:**
+Start: (00:54.00) | End: (00:58.20)
+The progress bar crawls to ninety percent; its glow lights Nadia's hiding spot.
+
+**GRANT (Suspicious):**
+Start: (00:58.50) | End: (01:01.00)
+"Why is this terminal on?"
+
+**CAMERA:**
+Start: (01:01.40) | End: (01:03.80)
+Extreme close-up on the USB light blinking red.
+
+**ACTION:**
+Start: (01:01.40) | End: (01:04.60)
+Grant reaches toward the USB drive, then stops.
+
+**ACTION:**
+Start: (01:04.90) | End: (01:08.90)
+Nadia's phone buzzes in her clutch; she smothers it against her chest.
+
+**SOUND FX:**
+Start: (01:09.20) | End: (01:11.20)
+A low buzz, then silence.
+
+**GRANT (Deadly calm):**
+Start: (01:09.20) | End: (01:12.04)
+"I know someone is in here."
+
+**ACTION:**
+Start: (01:12.44) | End: (01:16.44)
+Grant clicks on a flashlight and sweeps it slowly along the racks.
+
+**CAMERA:**
+Start: (01:16.74) | End: (01:19.14)
+The beam stops on the hem of Nadia's black dress.
+
+**GRANT (Menacing):**
+Start: (01:16.74) | End: (01:22.30)
+"Come out now, or I call the men who don't ask questions. Who's there?"
+
+**SOUND FX:**
+Start: (01:22.70) | End: (01:24.70)
+Ominous swell. Cut to black.
+
+--- SCRIPT END ---

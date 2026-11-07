@@ -1,0 +1,58 @@
+EPISODE NUMBER: Episode 1
+EPISODE LOGLINE: Healer Asha is accused of poisoning the young queen at her own coronation.
+CONTINUITY NOTES: Opening episode.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. EMBER CITADEL – THRONE HALL – DAY
+Scene start: 00:00.00
+Scene end: 00:33.78
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:02.40)
+Wide shot of crimson banners and a crowd of nobles.
+
+**ACTION:**
+Start: (00:00.00) | End: (00:04.00)
+Queen Maren collapses on the throne steps, her goblet spilling dark wine.
+
+**CORVIN (Shouting):**
+Start: (00:04.30) | End: (00:07.48)
+"The queen is poisoned! Seize the healer!"
+
+**ASHA (Horrified):**
+Start: (00:07.88) | End: (00:11.74)
+"I only mixed her a tonic for her headache!"
+
+**ACTION:**
+Start: (00:12.14) | End: (00:16.14)
+Guards grab Asha and force her to her knees before the throne.
+
+**CORVIN (Cold, Menacing):**
+Start: (00:16.44) | End: (00:19.28)
+"You will hang at dawn, witch."
+
+**SOUND FX:**
+Start: (00:19.68) | End: (00:21.68)
+The crowd roars.
+
+**ASHA (Desperate):**
+Start: (00:19.68) | End: (00:23.88)
+"Let me treat her! She'll die before dawn without me!"
+
+**MAREN (Weak, Whispering):**
+Start: (00:24.28) | End: (00:27.80)
+"Corvin... the cup... you gave me the cup."
+
+**CORVIN (Deadly):**
+Start: (00:28.20) | End: (00:31.38)
+"Take the healer to the tower. Now."
+
+**SOUND FX:**
+Start: (00:31.78) | End: (00:33.78)
+Ominous sting.
+
+--- SCRIPT END ---
