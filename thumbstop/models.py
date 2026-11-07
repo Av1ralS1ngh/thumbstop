@@ -9,7 +9,7 @@ Kind = Literal["dialogue", "action", "camera", "sfx"]
 
 def fmt_ts(t: float) -> str:
     """Seconds -> MM:SS.ss (the screenplay's own format)."""
-    m, s = divmod(max(t, 0.0), 60)
+    m, s = divmod(round(max(t, 0.0), 2), 60)
     return f"{int(m):02d}:{s:05.2f}"
 
 
@@ -45,6 +45,8 @@ class Beat:
         span = f"[{fmt_ts(self.t0)}-{fmt_ts(self.t1)}]"
         if self.kind == "dialogue":
             tag = f" ({', '.join(self.tags)})" if self.tags else ""
+            if not self.speaker:   # subtitles without speaker labels: just the line
+                return f'{self.id} {span}{tag} "{self.text}"'
             return f'{self.id} {span} {self.speaker}{tag}: "{self.text}"'
         return f"{self.id} {span} {self.kind.upper()}: {self.text}"
 
@@ -89,6 +91,7 @@ class Episode:
 class Show:
     name: str
     episodes: list[Episode]
+    total_episodes: int = 0   # last episode number before any --episodes filter (for spoiler checks)
 
     def ep(self, num: int) -> Episode | None:
         return next((e for e in self.episodes if e.num == num), None)

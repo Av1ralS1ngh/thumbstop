@@ -52,9 +52,11 @@ def test_zip_extraction_keeps_only_scripts_and_blocks_path_tricks(tmp_path):
         zf.writestr("show/episode-001-Episode 1.txt", "x")
         zf.writestr("__MACOSX/show/._episode-001-Episode 1.txt", "junk")
         zf.writestr("show/notes.pdf", "ignored")
+        zf.writestr("show/ep02.srt", "1\n00:00:01,000 --> 00:00:02,000\nhi\n")
+        zf.writestr("show/ep03.VTT", "WEBVTT\n\n00:01.000 --> 00:02.000\nhi\n")
     folder = app.extract_zip(buf.getvalue(), tmp_path / "a", "My Show")
-    assert [p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()] == \
-        ["show/episode-001-Episode 1.txt"]
+    assert sorted(p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()) == \
+        ["show/ep02.srt", "show/ep03.VTT", "show/episode-001-Episode 1.txt"]
 
     bad = io.BytesIO()
     with zipfile.ZipFile(bad, "w") as zf:

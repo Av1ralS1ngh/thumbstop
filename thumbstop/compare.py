@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def _load(run: Path) -> dict:
-    return json.loads((run / "promos.json").read_text())
+    return json.loads((run / "promos.json").read_text(encoding="utf-8"))
 
 
 def _spans(p: dict) -> list[tuple[int, float, float]]:
@@ -75,7 +75,7 @@ def cold_cost(run_dir: Path) -> str:
         except Exception:
             pass
     roles: dict[str, list[float]] = {}
-    for line in open(run_dir / "trace.jsonl"):
+    for line in open(run_dir / "trace.jsonl", encoding="utf-8"):
         r = json.loads(line)
         if r.get("cached") or not r.get("tin"):
             continue

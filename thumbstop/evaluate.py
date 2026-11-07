@@ -34,9 +34,9 @@ SEED = 20261107
 def _load(pack: str, run_dir: Path):
     show = parse_show(pack)
     anns = {int(k): EpisodeAnnotation.model_validate(v) for k, v in
-            json.loads((run_dir / "annotations.json").read_text()).items()}
-    cands = [promo_from_dict(d) for d in json.loads((run_dir / "candidates.json").read_text())]
-    scores = {d["id"]: d.get("final_score", d.get("score", 0)) for d in json.loads((run_dir / "candidates.json").read_text())}
+            json.loads((run_dir / "annotations.json").read_text(encoding="utf-8")).items()}
+    cands = [promo_from_dict(d) for d in json.loads((run_dir / "candidates.json").read_text(encoding="utf-8"))]
+    scores = {d["id"]: d.get("final_score", d.get("score", 0)) for d in json.loads((run_dir / "candidates.json").read_text(encoding="utf-8"))}
     return show, anns, cands, scores
 
 
@@ -108,9 +108,9 @@ def build(pack: str, run_dir: Path, router: Router) -> None:
                     for i, (d, p) in enumerate(clips)}
     rng.shuffle(tasks)
     key["__meta"] = {"frozen_commit": commit, "seed": SEED, "test_episodes": TEST_EPS, "design_episodes": DESIGN_EPS}
-    (out / "blind_key.json").write_text(json.dumps(key, indent=1))
-    (out / "blind_tasks.json").write_text(json.dumps(tasks, indent=1))
-    (out / "blind.html").write_text(blind_html(tasks))
+    (out / "blind_key.json").write_text(json.dumps(key, indent=1), encoding="utf-8")
+    (out / "blind_tasks.json").write_text(json.dumps(tasks, indent=1), encoding="utf-8")
+    (out / "blind.html").write_text(blind_html(tasks), encoding="utf-8")
     print(f"Blind page: {out / 'blind.html'}  ({sum(t['session']=='A' for t in tasks)} pairs, "
           f"{sum(t['session']=='B' for t in tasks)} triads)")
 
@@ -141,7 +141,7 @@ def build(pack: str, run_dir: Path, router: Router) -> None:
             else:
                 ctrl.append({"kind": label, "id": p.id, **{k: v.get(k) for k in ("passed", "hook_score", "cliff_score",
                                                                                 "standalone_score")}})
-    (out / "ai_judge.json").write_text(json.dumps({"blind": judged, "controls": ctrl}, indent=1))
+    (out / "ai_judge.json").write_text(json.dumps({"blind": judged, "controls": ctrl}, indent=1), encoding="utf-8")
     print(control_report(ctrl))
 
 
@@ -252,9 +252,9 @@ def sign_test(wins: int, losses: int) -> float:
 
 
 def score(run_dir: Path, answers_csv: Path) -> str:
-    key = json.loads((ROOT / "labels" / "blind_key.json").read_text())
-    ai = json.loads((ROOT / "labels" / "ai_judge.json").read_text())
-    rows = list(csv.DictReader(open(answers_csv)))
+    key = json.loads((ROOT / "labels" / "blind_key.json").read_text(encoding="utf-8"))
+    ai = json.loads((ROOT / "labels" / "ai_judge.json").read_text(encoding="utf-8"))
+    rows = list(csv.DictReader(open(answers_csv, encoding="utf-8")))
     by = {}
     for r in rows:
         if r["task"].startswith("__"):
@@ -313,7 +313,7 @@ def score(run_dir: Path, answers_csv: Path) -> str:
           "treat as directional."]
     L += ["", "```", control_report(ai["controls"]), "```"]
     text = "\n".join(L)
-    (run_dir / "eval_report.md").write_text(text)
+    (run_dir / "eval_report.md").write_text(text, encoding="utf-8")
     return text
 
 

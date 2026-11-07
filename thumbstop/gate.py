@@ -11,7 +11,7 @@ from rapidfuzz import fuzz
 from .annotate import EpisodeAnnotation
 from .llm import LLM, LLMError
 from .models import Beat, Show, fmt_ts
-from .search import MAX_LEN, Promo, check_cut, make_segment, validate
+from .search import MAX_LEN, MIN_LEN, Promo, check_cut, make_segment, validate
 
 GATE_VERSION = "gate-v2"
 REPAIR_VERSION = "repair-v1"
@@ -204,7 +204,8 @@ def _setup_options(show: Show, p: Promo, refs: list[str], k: int = 5) -> list[tu
     return opts
 
 
-def repair_one(show: Show, anns, p: Promo, repair_llm: LLM, gate_llm: LLM, max_rounds: int = 2) -> Promo | None:
+def repair_one(show: Show, anns, p: Promo, repair_llm: LLM, gate_llm: LLM, max_rounds: int = 2,
+               lo: float = MIN_LEN, hi: float = MAX_LEN) -> Promo | None:
     """Agent loop: gate says 'lost' -> code finds candidate setups -> model picks one -> code builds + validates
     -> gate re-checks. Stops when the gate passes, the model declines, or rounds run out."""
     cur, log = p, []
@@ -232,7 +233,7 @@ def repair_one(show: Show, anns, p: Promo, repair_llm: LLM, gate_llm: LLM, max_r
         if len(earlier) + 2 > 3:
             log.append({"round": rnd, "action": "segment_limit"})
             break
-        budget = MAX_LEN - setup.dur - sum(s.dur for s in earlier)
+        budget = hi - setup.dur - sum(s.dur for s in earlier)
         if main.dur > budget:  # tighten the main segment from the front, keeping the cliffhanger end
             ep = show.ep(main.ep)
             later = [u for u in ep.cut_units if u.t0 >= main.end - budget and u.t0 < main.end - 15]
@@ -252,7 +253,7 @@ def repair_one(show: Show, anns, p: Promo, repair_llm: LLM, gate_llm: LLM, max_r
             h.beat_id == opener.id and h.strength >= 2 for h in anns[opener.ep].hooks)
         cand = replace(cur, id=p.id + "R", source="repaired", segments=segs,
                        hook_beat=opener.id if opener_is_hook else cur.hook_beat)
-        errs = validate(show, cand)
+        errs = validate(show, cand, lo, hi)
         if errs:
             log.append({"round": rnd, "action": "invalid", "errors": errs})
             break

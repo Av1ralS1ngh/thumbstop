@@ -38,6 +38,7 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
     t_start = time.time()
     out.mkdir(parents=True, exist_ok=True)
     show = parse_show(folder)
+    show.total_episodes = max((e.num for e in show.episodes), default=0)
     if opt.episodes:
         a, b = opt.episodes
         show.episodes = [e for e in show.episodes if a <= e.num <= b]
@@ -54,7 +55,7 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
     # 1. annotate (AI): sparse ranked hook / cliffhanger beats per episode
     log("[1/5] annotating episodes ...")
     anns: dict[int, EpisodeAnnotation] = annotate_show(show, router["annotate"], log=log)
-    (out / "annotations.json").write_text(json.dumps({k: v.model_dump() for k, v in anns.items()}, indent=1))
+    (out / "annotations.json").write_text(json.dumps({k: v.model_dump() for k, v in anns.items()}, indent=1), encoding="utf-8")
     funnel["anchors"] = sum(len(a.cliffhangers) for a in anns.values())
     funnel["hook_beats"] = sum(len(a.hooks) for a in anns.values())
 
@@ -100,7 +101,7 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
         log(f"[4/5] setup-repair on {len(fails)} promos the cold viewer could not follow ...")
         def _rep(p):
             try:
-                return repair_one(show, anns, p, router["repair"], router["gate"])
+                return repair_one(show, anns, p, router["repair"], router["gate"], lo=opt.min_len, hi=opt.max_len)
             except (LLMError, BudgetExceeded) as e:
                 p.repair = {"attempted": True, "error": str(e)[:200]}
                 return None
@@ -124,7 +125,7 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
     rank_pool = final_pool + [p for p in pool if p not in short]
     ranked, variants = select(rank_pool, top=opt.top, per_episode=2)
     late = 0
-    for _ in range(2 if opt.gate else 0):   # every promo the editor sees gets a cold-viewer verdict
+    for _ in range(4 if opt.gate else 0):   # every promo the editor sees gets a cold-viewer verdict
         unchecked = [p for p in ranked if not p.gate]
         if not unchecked:
             break
@@ -135,6 +136,12 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
             f = drift_flag(p.gate)
             if f and f not in p.flags:
                 p.flags.append(f)
+        ranked, variants = select(rank_pool, top=opt.top, per_episode=2)
+    if opt.gate and any(not p.gate for p in ranked):
+        # still unseen after the late checks: from here on it ranks like a failed check (never above a checked one)
+        for p in rank_pool:
+            if not p.gate:
+                p.gate = {"passed": None, "unchecked": True}
         ranked, variants = select(rank_pool, top=opt.top, per_episode=2)
     if late:
         funnel["late_checked"] = late
@@ -149,7 +156,7 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
               extra={"repairs": [{"id": r.id, "from": (r.repair or {}).get("from"), "result": (r.repair or {}).get("result"),
                                   "log": (r.repair or {}).get("log")} for r in repaired]})
     (out / "candidates.json").write_text(json.dumps(
-        [dict(p.to_dict(), final_score=final_score(p)) for p in pool + repaired], indent=1, default=str))
+        [dict(p.to_dict(), final_score=final_score(p)) for p in pool + repaired], indent=1, default=str), encoding="utf-8")
     log(f"Done in {meta['seconds']}s | calls {u.calls} (+{u.cache_hits} cached) | est. ${u.usd:.2f} | funnel {funnel}")
     return {"show": show, "anns": anns, "pool": pool, "short": short, "ranked": ranked, "picks": picks, "meta": meta}
 

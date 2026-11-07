@@ -49,7 +49,10 @@ def policy_status(show: Show, p: Promo) -> dict:
 
 
 def spoiler_note(show: Show, p: Promo) -> str:
-    n = len(show.episodes)
+    # the whole show's length, not just the episodes loaded for this run (--episodes 8-10 is not "3 episodes")
+    n = show.total_episodes or max((e.num for e in show.episodes), default=0)
+    if n < 5:                      # a 1 to 4 episode show has no "late season" to spoil
+        return ""
     ep = max(p.episodes)
     if ep > 0.6 * n:
         return f"late-season clip (ep {ep} of {n}): editor should check it does not give away a later twist"
@@ -60,7 +63,7 @@ def final_score(p: Promo) -> float:
     """Search score, adjusted by the cold viewer's verdict (a gate + tie-break, never the main driver)."""
     g = p.gate or {}
     s = p.score
-    if g.get("passed") is False:
+    if g.get("passed") is False or g.get("unchecked"):
         s -= 25
     if g.get("passed"):
         s += 2 * (g.get("standalone_score", 0) + g.get("hook_score", 0) + g.get("cliff_score", 0)) / 3
@@ -81,6 +84,8 @@ def _overlap(a: Promo, b: Promo) -> float:
 def select(promos: list[Promo], top: int = 20, per_episode: int = 2) -> tuple[list[Promo], dict[str, list[Promo]]]:
     """Greedy diverse selection by final score. Returns (ranked list, variants keyed by primary id)."""
     pool = sorted(promos, key=lambda p: -final_score(p))
+    for p in pool:                 # only promos chosen in THIS selection carry a rank
+        p.rank, p.rank_reason = 0, ""
     chosen: list[Promo] = []
     variants: dict[str, list[Promo]] = {}
     by_moment: dict[str, Promo] = {}
@@ -90,7 +95,7 @@ def select(promos: list[Promo], top: int = 20, per_episode: int = 2) -> tuple[li
             continue
         if len(chosen) >= top:
             continue
-        if sum(1 for c in chosen if c.episodes[0] == p.episodes[0]) >= per_episode:
+        if sum(1 for c in chosen if c.episodes[-1] == p.episodes[-1]) >= per_episode:   # where the cliffhanger is
             continue
         if any(_overlap(p, c) > 0.5 for c in chosen):
             continue

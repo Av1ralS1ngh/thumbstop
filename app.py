@@ -33,6 +33,7 @@ UPLOAD = "Upload a .zip of episode files"
 OUTPUTS = {"promos.csv": "text/csv", "promos.json": "application/json", "selects.edl": "text/plain",
            "review.html": "text/html"}
 MAX_FILES, MAX_UNZIPPED = 1000, 200 * 1024 * 1024
+EPISODE_SUFFIXES = (".txt", ".srt", ".vtt")   # same formats the CLI reads
 
 # ---------------------------------------------------------------- demo show (original fiction)
 DEMO_NAME = "The Forty-Third Floor (demo)"
@@ -173,21 +174,22 @@ def write_demo_show(dest: Path) -> Path:
     folder = dest / DEMO_NAME
     folder.mkdir(parents=True)
     for ep in DEMO_EPISODES:
-        (folder / f"episode-{ep['num']:03d}-Episode {7000 + ep['num']}.txt").write_text(render_demo_episode(ep))
+        (folder / f"episode-{ep['num']:03d}-Episode {7000 + ep['num']}.txt").write_text(render_demo_episode(ep), encoding="utf-8")
     return folder
 
 
 # ---------------------------------------------------------------- run helpers
 def extract_zip(data: bytes, dest: Path, show_name: str) -> Path:
-    """Unpack only the .txt scripts into dest/<show_name>/, refusing path tricks and oversized archives."""
+    """Unpack only the episode files (.txt scripts or transcripts, .srt, .vtt) into dest/<show_name>/,
+    refusing path tricks and oversized archives."""
     folder = dest / show_name
     folder.mkdir(parents=True)
     root = folder.resolve()
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
-        members = [m for m in zf.infolist() if not m.is_dir() and m.filename.lower().endswith(".txt")
+        members = [m for m in zf.infolist() if not m.is_dir() and m.filename.lower().endswith(EPISODE_SUFFIXES)
                    and "__MACOSX" not in m.filename and not Path(m.filename).name.startswith(".")]
         if not members:
-            raise ValueError("the zip has no .txt episode files")
+            raise ValueError("the zip has no episode files (.txt, .srt or .vtt)")
         if len(members) > MAX_FILES or sum(m.file_size for m in members) > MAX_UNZIPPED:
             raise ValueError(f"the zip is too large (limit {MAX_FILES} files / {MAX_UNZIPPED // 2**20} MB unzipped)")
         for m in members:
@@ -246,7 +248,7 @@ def execute(mode: str, env: dict[str, str | None], opt: Options, zip_bytes: byte
             router.cache_dir = work / "cache"   # nothing derived from the scripts outlives the run
             same_family = mode != OFFLINE and router["annotate"].family == router["gate"].family
             run(folder, out, router, opt, log=log)
-        return {"doc": json.loads((out / "promos.json").read_text()), "same_family": same_family,
+        return {"doc": json.loads((out / "promos.json").read_text(encoding="utf-8")), "same_family": same_family,
                 "files": {name: (out / name).read_bytes() for name in OUTPUTS}}
 
 
@@ -388,7 +390,7 @@ def main() -> None:
     source = st.radio("Scripts", [DEMO, UPLOAD], horizontal=True, key="source")
     upload = None
     if source == UPLOAD:
-        upload = st.file_uploader("Episode files (.zip of .txt screenplays)", type=["zip"], key="upload")
+        upload = st.file_uploader("Episode files (.zip of .txt screenplays, .srt or .vtt)", type=["zip"], key="upload")
     ready = settings is not None and (source == DEMO or upload is not None)
     if st.button("Find promos", type="primary", disabled=not ready, key="run"):
         assert settings is not None

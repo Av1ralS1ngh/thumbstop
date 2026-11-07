@@ -3,6 +3,7 @@ with accept / nudge / reject + timer), selects.edl (CMX3600, top promos back to 
 from __future__ import annotations
 
 import csv
+import hashlib
 import html
 import json
 from pathlib import Path
@@ -34,7 +35,10 @@ def _next_unit(show: Show, ep_num: int, t: float) -> Beat | None:
 def _say(b: Beat | None) -> str:
     if not b:
         return "(end of episode)"
-    return f'{b.speaker}: "{b.text}"' if b.kind == "dialogue" else f"[{b.text}]"
+    if b.kind != "dialogue":
+        return f"[{b.text}]"
+    return f'{b.speaker}: "{b.text}"' if b.speaker else f'"{b.text}"'
+
 
 
 def cut_sheet(show: Show, p: Promo) -> dict:
@@ -90,8 +94,8 @@ def write_all(show: Show, out: Path, ranked: list[Promo], variants: dict, picks:
     doc = {"show": show.name, "meta": meta,
            "post_first": [{"id": p.id, "rank": p.rank, "reason": r} for p, r in picks],
            "promos": recs, "variants": var, **(extra or {})}
-    (out / "promos.json").write_text(json.dumps(doc, indent=2, ensure_ascii=False))
-    with open(out / "promos.csv", "w", newline="") as f:
+    (out / "promos.json").write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8")
+    with open(out / "promos.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["rank", "promo_id", "segment", "episode", "start", "end", "start_tc", "end_tc", "seg_dur_s",
                     "promo_dur_s", "hook", "cliffhanger", "why_it_works", "hook_type", "cliff_type", "open_question",
@@ -103,8 +107,8 @@ def write_all(show: Show, out: Path, ranked: list[Promo], variants: dict, picks:
                             r["open_question"], s["cut_confidence"], p.policy.get("status", ""),
                             (p.gate or {}).get("passed")])
     write_edl(out / "selects.edl", show, ranked)
-    (out / "report.md").write_text(report_md(show, ranked, recs, picks, meta))
-    (out / "review.html").write_text(review_html(show, recs, picks, meta))
+    (out / "report.md").write_text(report_md(show, ranked, recs, picks, meta), encoding="utf-8")
+    (out / "review.html").write_text(review_html(show, recs, picks, meta), encoding="utf-8")
 
 
 def write_edl(path: Path, show: Show, ranked: list[Promo]) -> None:
@@ -128,7 +132,7 @@ def write_edl(path: Path, show: Show, ranked: list[Promo]) -> None:
             ev += 1
             rec += f_out - f_in
         rec += 2 * FPS  # 2 s gap between promos
-    path.write_text("\n".join(lines))
+    path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def report_md(show: Show, ranked: list[Promo], recs: list[dict], picks: list, meta: dict) -> str:
@@ -152,6 +156,12 @@ def report_md(show: Show, ranked: list[Promo], recs: list[dict], picks: list, me
         L.append(f"| {r['rank']} | {segs} | {r['duration_s']:.0f}s | {esc(r['hook'])[:90]} | "
                  f"{esc(r['cliffhanger'])[:90]} | {esc(r['why_it_works'])[:80]} | {cvs} | {r['policy'].get('status', '')} |")
     return "\n".join(L) + "\n"
+
+
+def run_fingerprint(recs: list[dict]) -> str:
+    """Short id of exactly which clips this page shows, so saved decisions never carry over to a different run."""
+    sig = json.dumps([(r["id"], [(s["episode"], s["in_ts"], s["out_ts"]) for s in r["segments"]]) for r in recs])
+    return hashlib.sha1(sig.encode()).hexdigest()[:10]
 
 
 def review_html(show: Show, recs: list[dict], picks: list, meta: dict) -> str:
@@ -210,7 +220,7 @@ table{{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}} td,th{{
 <small>Timecodes at {FPS} fps from script timestamps; confirm on picture.</small></div>
 {''.join(cards)}
 <script>
-const KEY='promo-review-'+location.pathname; let st={{}}; try{{st=JSON.parse(localStorage.getItem(KEY)||'{{}}')}}catch(e){{}}
+const KEY='promo-review-'+location.pathname+'-{run_fingerprint(recs)}'; let st={{}}; try{{st=JSON.parse(localStorage.getItem(KEY)||'{{}}')}}catch(e){{}}
 let t0=st.__t0||null; const save=()=>{{try{{localStorage.setItem(KEY,JSON.stringify(st))}}catch(e){{}}}};
 const start=()=>{{if(!t0){{t0=Date.now();st.__t0=t0;save()}}}};
 const q=v=>{{v=String(v??'');return /[",\\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}};

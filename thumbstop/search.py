@@ -116,7 +116,9 @@ def validate(show: Show, p: Promo, lo: float = MIN_LEN, hi: float = MAX_LEN) -> 
         _, _, issues = check_cut(ep, s.start, s.end)
         errs += [i for i in issues if i.startswith("MID_LINE")]
     for a, b in zip(p.segments, p.segments[1:]):
-        if a.ep == b.ep and b.start < a.end - 0.01:
+        if (b.ep, b.start) < (a.ep, a.start):
+            errs.append("OUT_OF_STORY_ORDER")
+        elif a.ep == b.ep and b.start < a.end - 0.01:
             errs.append("SEGMENTS_OVERLAP")
     hb = show.beat(p.hook_beat)
     if hb is None:

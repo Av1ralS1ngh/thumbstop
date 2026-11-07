@@ -20,10 +20,17 @@ from .pipeline import Options, run
 
 
 def _range(s: str | None):
+    """'3-10' -> (3, 10); '7' -> (7, 7); '10-3' is read as 3-10. Bad input is a clean argparse error."""
     if not s:
         return None
     a, _, b = s.partition("-")
-    return (int(a), int(b or a))
+    try:
+        lo, hi = int(a), int(b or a)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected an episode range like 1-10 or 7, got {s!r}") from None
+    if lo < 1 or hi < 1:
+        raise argparse.ArgumentTypeError(f"episode numbers start at 1, got {s!r}")
+    return (min(lo, hi), max(lo, hi))
 
 
 def _load_env() -> None:
@@ -50,7 +57,7 @@ def main(argv=None) -> int:
         r.add_argument("--config")
         r.add_argument("--fast", action="store_true", help="interview mode: no repair, no seeds (every shown promo is still cold-checked)")
         r.add_argument("--offline", action="store_true", help="no network: rules-only annotator and gate")
-        r.add_argument("--episodes", help="e.g. 1-10")
+        r.add_argument("--episodes", type=_range, help="e.g. 1-10")
         r.add_argument("--top", type=int, default=20)
         r.add_argument("--min", type=float, default=20.0)
         r.add_argument("--max", type=float, default=60.0)
@@ -83,7 +90,7 @@ def main(argv=None) -> int:
         return 0
 
     cfg = load_config(a.config)
-    if a.budget_usd:
+    if a.budget_usd is not None:
         cfg.setdefault("budget", {})["max_usd"] = a.budget_usd
     single = "rules" if a.offline else a.profile
     out = Path(a.out) if a.out else ROOT / "runs" / (("offline" if a.offline else (a.profile or "default")))
@@ -91,7 +98,7 @@ def main(argv=None) -> int:
     if router["annotate"].family == router["gate"].family and not a.offline:
         print(f"NOTE: annotate and gate use the same model family ({router['gate'].family}); "
               "the cold-viewer check is less independent. Prefer a different family for --gate.")
-    opt = Options(top=a.top, gate=not a.no_gate, repair=not a.fast, episodes=_range(a.episodes), min_len=a.min,
+    opt = Options(top=a.top, gate=not a.no_gate, repair=not a.fast, episodes=a.episodes, min_len=a.min,
                   max_len=a.max, exclude_policy=["violence"] if a.no_violence else [],
                   hook_types=[h for h in a.hook_types.split(",") if h], gate_n=max(12, a.top + 4) if a.fast else max(40, a.top + 4),
                   no_notes=a.no_notes, seeds=not (a.no_seeds or a.fast))

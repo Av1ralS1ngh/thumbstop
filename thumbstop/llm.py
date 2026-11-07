@@ -61,7 +61,7 @@ class Profile:
 
 def load_config(path: str | Path | None = None) -> dict:
     path = Path(path) if path else ROOT / "config.yaml"
-    raw = path.read_text()
+    raw = path.read_text(encoding="utf-8")
     raw = re.sub(r"\$\{(\w+)\}", lambda m: os.environ.get(m.group(1), ""), raw)
     return yaml.safe_load(raw)
 
@@ -344,7 +344,7 @@ class LLM:
             return
         rec = {"ts": round(time.time(), 3), "role": self.role, "profile": self.p.name, "model": self.p.model,
                "tag": tag, **kw}
-        with self._trace_lock, open(self.trace_path, "a") as f:
+        with self._trace_lock, open(self.trace_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec) + "\n")
 
 
