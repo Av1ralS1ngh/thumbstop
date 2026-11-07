@@ -17,6 +17,7 @@ uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requi
 .venv/bin/python -m thumbstop run <folder of episodes> --out runs/myshow   # real models (AWS login), see below
 open runs/myshow/review.html                                               # cut sheets + accept / nudge / reject
 streamlit run app.py                                                       # the web app
+# open http://localhost:8501/?demo=1 to run the built-in demo show on arrival
 ```
 
 Outputs in `--out`: `promos.json` and `promos.csv` (rank, episode, start/end of every segment, hook, cliffhanger,
