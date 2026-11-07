@@ -119,6 +119,13 @@ def _why_above(a: Promo, b: Promo) -> str:
     return ("ranked above #%d: " % b.rank + ", ".join(diffs[:2])) if diffs else f"ranked above #{b.rank}: higher overall score"
 
 
+HOOK_PHRASE = {"humiliation": "a public humiliation", "physical_aggression": "a physical attack",
+               "identity_reveal": "a reveal", "threat_ultimatum": "a threat", "betrayal_caught": "a betrayal caught in the act",
+               "accusation_frameup": "an accusation", "proposal_or_contract": "a proposal", "power_reversal": "a power reversal",
+               "rescue": "a rescue", "shocking_confession": "a shocking line", "danger": "a moment of danger",
+               "other": "a strong moment"}
+
+
 def post_first(chosen: list[Promo], n: int = 3, early_ep: int = 15) -> list[tuple[Promo, str]]:
     """Which to post first: spoiler-safe, early-funnel, not HOLD, distinct hook types."""
     picks, used_types = [], set()
@@ -138,7 +145,7 @@ def post_first(chosen: list[Promo], n: int = 3, early_ep: int = 15) -> list[tupl
             reasons = []
             if p.episodes[0] <= early_ep:
                 reasons.append(f"from episode {p.episodes[0]}, so a new viewer reaches the payoff within the free early episodes")
-            reasons.append(f"opens on a {p.hook_type.replace('_', ' ')} and leaves the question \"{p.open_question}\" open")
+            reasons.append(f"opens on {HOOK_PHRASE.get(p.hook_type, 'a strong moment')} and leaves the question \"{p.open_question}\" open")
             if p.policy.get("status") == "CLEAR":
                 reasons.append("no ad-policy flags")
             picks.append((p, "; ".join(reasons)))

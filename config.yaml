@@ -37,7 +37,13 @@ profiles:
     model: deepseek.v3.2
     price_in: 0.60
     price_out: 1.70
-    max_concurrency: 6
+    max_concurrency: 8
+  mistral_large:
+    provider: bedrock_converse
+    model: mistral.mistral-large-3-675b-instruct
+    price_in: 0.50
+    price_out: 1.50
+    max_concurrency: 8
 
   # --- Claude in Amazon Bedrock, Opus 4.7+ (Mantle endpoint; needs Anthropic model access enabled on the account)
   opus47:

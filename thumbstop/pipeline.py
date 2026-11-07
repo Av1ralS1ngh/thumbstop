@@ -29,6 +29,7 @@ class Options:
     exclude_policy: list[str] = field(default_factory=list)   # e.g. ["violence"] for a "no violence" what-if
     hook_types: list[str] = field(default_factory=list)
     early_ep: int = 15
+    no_notes: bool = False         # ablation: ignore the writers' continuity notes
 
 
 def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) -> dict:
@@ -40,6 +41,9 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
         show.episodes = [e for e in show.episodes if a <= e.num <= b]
         if not show.episodes:
             raise SystemExit(f"no episodes in range {a}-{b}")
+    if opt.no_notes:
+        for e in show.episodes:
+            e.continuity = ""
     rep = ingest_report(show)
     log(rep)
     log(f"Models: {router.describe()}")

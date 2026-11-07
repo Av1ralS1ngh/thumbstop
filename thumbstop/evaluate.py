@@ -193,7 +193,7 @@ def blind_html(tasks: list[dict]) -> str:
     for t in tasks:
         q = ("Same ending, different opening. Which would you post?" if t["session"] == "A"
              else "Three different promos from one episode. Which would you post first?")
-        clips = "".join(f"""<div class="clip"><h3>Clip {c['label']} <small>{c['dur']}s</small></h3><pre>{html.escape(c['text'])}</pre>
+        clips = "".join(f"""<div class="clip"><h3>Clip {c['label']}</h3><pre>{html.escape(c['text'])}</pre>
 <div class="yn">Hook in first 3s? <label><input type="radio" name="{t['id']}-{c['label']}-hook" value="1">yes</label><label><input type="radio" name="{t['id']}-{c['label']}-hook" value="0">no</label>
  &nbsp; Ends unresolved? <label><input type="radio" name="{t['id']}-{c['label']}-cliff" value="1">yes</label><label><input type="radio" name="{t['id']}-{c['label']}-cliff" value="0">no</label>
  &nbsp; Makes sense alone? <label><input type="radio" name="{t['id']}-{c['label']}-alone" value="1">yes</label><label><input type="radio" name="{t['id']}-{c['label']}-alone" value="0">no</label></div></div>"""
