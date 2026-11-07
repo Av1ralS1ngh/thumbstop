@@ -26,8 +26,17 @@ def _range(s: str | None):
     return (int(a), int(b or a))
 
 
-def main(argv=None) -> int:
+def _load_env() -> None:
+    """Load .env, then drop empty values so a blank AWS_* line never overrides the normal AWS login."""
+    import os
+
     load_dotenv(ROOT / ".env")
+    for k in [k for k, v in os.environ.items() if v == "" and (k.startswith("AWS_") or k.endswith("_API_KEY"))]:
+        del os.environ[k]
+
+
+def main(argv=None) -> int:
+    _load_env()
     ap = argparse.ArgumentParser(prog="thumbstop", description="Find, cut-sheet and rank promos in microdrama screenplays")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("run", "whatif"):

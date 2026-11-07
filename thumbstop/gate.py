@@ -13,7 +13,7 @@ from .llm import LLM, LLMError
 from .models import Beat, Show, fmt_ts
 from .search import MAX_LEN, Promo, check_cut, make_segment, validate
 
-GATE_VERSION = "gate-v1"
+GATE_VERSION = "gate-v2"
 REPAIR_VERSION = "repair-v1"
 NAME_STOP = {"LADY", "LORD", "THE", "SIR", "MISS", "MR", "MRS", "OF", "AND", "YOUNG", "OLD", "ELDER", "HIGH"}
 
@@ -32,14 +32,25 @@ class GateVerdict(BaseModel):
     gives_away_payoff: bool = Field(description="Does the clip already answer its own open question?")
 
 
-GATE_SYSTEM = """You are a viewer scrolling TikTok who has NEVER seen this show. You are shown the transcript of a short clip (dialogue plus what is visibly happening). You know nothing else - judge only what is in the clip.
+GATE_SYSTEM = """You are a viewer scrolling TikTok who has NEVER seen this show. You are shown the transcript of a short clip (dialogue plus what is visibly happening, with times in seconds from the start). You know nothing else - judge only what is in the clip. You are a tough critic: most clips are ordinary, and a 3 is rare.
 
-Be honest and strict:
-- hook_in_3s: would the very first moment make you stop scrolling?
-- ends_unresolved: does it cut while something is unresolved (not after a resolution or a calm goodbye)?
-- stands_alone: could you explain who these people are to each other and what is at stake? Archetypes are enough ("a bride humiliated by her family"); you do not need names.
-- unexplained: quote anything that only makes sense if you had watched earlier (unknown names, "the ring", "what you did").
-Scores are 0-3 (0 = fails completely, 3 = excellent)."""
+hook_score - the first 3 seconds only:
+ 3 = a shock you cannot scroll past (a slap, a public betrayal line, a threat, a reveal) that reads instantly
+ 2 = clear conflict starts immediately but is not shocking
+ 1 = it takes a few lines to get going, or it opens on setup/explanation
+ 0 = opens on calm talk, logistics, or something meaningless without context
+cliff_score - the last moment:
+ 3 = cuts right before an answer you badly want (a decision, a reveal, an attack about to land)
+ 2 = tension is left open but the question is vague
+ 1 = mostly resolved, or ends on a reaction with nothing pending
+ 0 = ends on a resolution, a goodbye, or the answer itself
+standalone_score - could you tell a friend what is going on?
+ 3 = who these people are to each other and what is at stake are clear from the clip alone (archetypes are enough)
+ 2 = the gist is clear; one or two details are fuzzy
+ 1 = you follow the emotion but not the situation
+ 0 = you are lost
+unexplained: list ONLY things that block understanding (an unknown person or past event the clip relies on, an object whose importance is never shown). Do not list lines that are clear in context. Empty list if nothing blocks you.
+gives_away_payoff: true only if the clip itself answers the question it raises."""
 
 
 def clip_text(show: Show, anns: dict[int, EpisodeAnnotation], p: Promo, anonymize: bool = True) -> str:
@@ -99,8 +110,8 @@ def gate_one(show: Show, anns: dict[int, EpisodeAnnotation], p: Promo, llm: LLM)
     d = v.model_dump()
     for k in ("hook_score", "cliff_score", "standalone_score"):
         d[k] = min(3, max(0, d[k]))
-    d["passed"] = bool(v.ends_unresolved and (v.stands_alone or v.standalone_score >= 2) and not v.gives_away_payoff
-                       and v.open_question.strip())
+    d["passed"] = bool(d["hook_score"] >= 2 and d["cliff_score"] >= 2 and d["standalone_score"] >= 2
+                       and not v.gives_away_payoff and v.open_question.strip())
     d["judge"] = llm.p.model
     return d
 

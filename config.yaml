@@ -2,7 +2,44 @@
 # (one-profile mode: every role uses that model). Prices are list USD per 1M tokens, for cost reports only.
 
 profiles:
-  # --- Claude in Amazon Bedrock (Anthropic SDK, Mantle endpoint). Auth: AWS_BEARER_TOKEN_BEDROCK or AWS creds.
+  # --- Bedrock via the Converse API, signed with your normal AWS login (aws configure / AWS_PROFILE)
+  opus46:
+    provider: bedrock_converse
+    model: us.anthropic.claude-opus-4-6-v1
+    alt_models: [global.anthropic.claude-opus-4-6-v1]   # separate quota -> 2x throughput
+    rpm: 4.5                                             # account quota is 5 req/min per profile
+    price_in: 5.0
+    price_out: 25.0
+    max_concurrency: 4
+  sonnet46:
+    provider: bedrock_converse
+    model: us.anthropic.claude-sonnet-4-6
+    alt_models: [global.anthropic.claude-sonnet-4-6]
+    rpm: 4.5
+    price_in: 3.0
+    price_out: 15.0
+    max_concurrency: 6
+  gptoss:                     # same open model Groq serves free -> the free-tier judge is identical
+    provider: bedrock_converse
+    model: openai.gpt-oss-120b-1:0
+    extra: {reasoning_effort: low}
+    price_in: 0.15
+    price_out: 0.60
+    max_concurrency: 8
+  kimi:
+    provider: bedrock_converse
+    model: us.moonshotai.kimi-k3.1
+    price_in: 0.60
+    price_out: 2.50
+    max_concurrency: 6
+  deepseek:
+    provider: bedrock_converse
+    model: deepseek.v3.2
+    price_in: 0.60
+    price_out: 1.70
+    max_concurrency: 6
+
+  # --- Claude in Amazon Bedrock, Opus 4.7+ (Mantle endpoint; needs Anthropic model access enabled on the account)
   opus47:
     provider: anthropic_bedrock
     model: anthropic.claude-opus-4-7
@@ -57,10 +94,10 @@ profiles:
     model: rules
 
 roles:
-  annotate: opus47        # finds hook & cliffhanger beats per episode
-  gate: bedrock_gptoss    # cold-viewer check (different family from annotate)
-  repair: opus47          # picks one setup segment when the cold viewer is lost
-  propose: opus47         # field-standard baseline: model proposes whole promos
+  annotate: opus46        # finds hook & cliffhanger beats per episode
+  gate: gptoss            # cold-viewer check (different family from annotate)
+  repair: opus46          # picks one setup segment when the cold viewer is lost
+  propose: opus46         # field-standard baseline: model proposes whole promos
 
 budget:
   max_calls: 600

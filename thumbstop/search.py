@@ -207,3 +207,10 @@ def best_per_moment(cands: list[Promo]) -> list[Promo]:
 def assign_ids(promos: list[Promo], prefix: str = "P") -> None:
     for i, p in enumerate(sorted(promos, key=lambda p: (-p.score, p.moment)), 1):
         p.id = f"{prefix}{i:03d}"
+
+
+def promo_from_dict(d: dict) -> Promo:
+    segs = [Segment(ep=s["ep"], start=s["start"], end=s["end"], first_beat=s.get("first_beat", ""),
+                    last_beat=s.get("last_beat", "")) for s in d["segments"]]
+    keep = {k: v for k, v in d.items() if k in Promo.__dataclass_fields__ and k != "segments"}
+    return Promo(segments=segs, **keep)

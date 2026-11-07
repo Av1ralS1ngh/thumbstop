@@ -47,6 +47,8 @@ class Profile:
     price_in: float = 0.0             # USD per 1M tokens (list price, for cost reports)
     price_out: float = 0.0
     max_concurrency: int = 4
+    rpm: float | None = None          # client-side requests/minute cap per model id (Bedrock quotas)
+    alt_models: list = field(default_factory=list)  # extra model ids with separate quotas, used round-robin
 
     @property
     def family(self) -> str:
@@ -117,6 +119,30 @@ def _extract_json(text: str) -> str:
     return text
 
 
+# ---------------------------------------------------------------- rate limiting
+_RL_LOCK = threading.Lock()
+_RL_NEXT: dict[str, float] = {}
+
+
+def _wait_turn(model_id: str, rpm: float | None) -> None:
+    """Process-wide spacing of requests per model id, so parallel roles share one quota."""
+    if not rpm:
+        return
+    gap = 60.0 / rpm
+    with _RL_LOCK:
+        now = time.time()
+        slot = max(now, _RL_NEXT.get(model_id, 0.0))
+        _RL_NEXT[model_id] = slot + gap
+    if slot > now:
+        time.sleep(slot - now)
+
+
+def _is_throttle(e: Exception) -> bool:
+    t = f"{type(e).__name__} {e}".lower()
+    return any(k in t for k in ("throttl", "too many requests", "rate limit", "ratelimit", "429", "serviceunavailable",
+                                "overloaded", "529"))
+
+
 # ---------------------------------------------------------------- providers
 class _Claude:
     """Claude in Amazon Bedrock via the Anthropic SDK's Mantle client."""
@@ -147,6 +173,49 @@ class _Claude:
         tin = (u.input_tokens or 0) + (getattr(u, "cache_read_input_tokens", 0) or 0) \
             + (getattr(u, "cache_creation_input_tokens", 0) or 0)
         return text, tin, u.output_tokens or 0
+
+
+class _BedrockConverse:
+    """Any Bedrock model (Claude <=4.6, gpt-oss, Kimi, DeepSeek, Mistral, Llama, Nova) via the Converse API,
+    signed with the standard AWS credential chain (e.g. `aws configure` / AWS_PROFILE)."""
+
+    def __init__(self, p: Profile):
+        import boto3
+        import botocore.config
+
+        region = os.environ.get(p.region_env) or os.environ.get("AWS_REGION") or "us-east-1"
+        session = boto3.Session(profile_name=os.environ.get("AWS_PROFILE") or None)
+        self.client = session.client("bedrock-runtime", region_name=region, config=botocore.config.Config(
+            retries={"max_attempts": 2, "mode": "standard"}, read_timeout=300))
+        self.p = p
+        self.ids = [p.model] + list(p.alt_models)
+        self._rr = 0
+        self._lock = threading.Lock()
+
+    def _next_id(self) -> str:
+        with self._lock:
+            mid = self.ids[self._rr % len(self.ids)]
+            self._rr += 1
+        return mid
+
+    def __call__(self, system: str, user: str, schema: type[BaseModel], max_tokens: int):
+        sys = (system + "\n\nReturn ONLY a JSON object (no prose, no code fences) matching this JSON Schema:\n"
+               + json.dumps(schema.model_json_schema()))
+        kw: dict[str, Any] = {}
+        if self.p.extra:
+            kw["additionalModelRequestFields"] = dict(self.p.extra)
+        mid = self._next_id()
+        _wait_turn(mid, self.p.rpm)
+        resp = self.client.converse(
+            modelId=mid, system=[{"text": sys}],
+            messages=[{"role": "user", "content": [{"text": user}]}],
+            inferenceConfig={"maxTokens": max_tokens}, **kw,
+        )
+        if resp.get("stopReason") == "max_tokens":
+            raise LLMError("output truncated at max_tokens")
+        text = "".join(c.get("text", "") for c in resp["output"]["message"]["content"])
+        u = resp.get("usage", {})
+        return text, u.get("inputTokens", 0), u.get("outputTokens", 0)
 
 
 class _OpenAICompat:
@@ -205,6 +274,8 @@ class LLM:
         if self._impl is None:
             if self.p.provider == "anthropic_bedrock":
                 self._impl = _Claude(self.p)
+            elif self.p.provider == "bedrock_converse":
+                self._impl = _BedrockConverse(self.p)
             elif self.p.provider == "openai_compat":
                 self._impl = _OpenAICompat(self.p)
             else:
@@ -232,8 +303,7 @@ class LLM:
         cur_user, last_err = user, None
         for attempt in range(2):
             t = time.time()
-            with self._sem:
-                text, tin, tout = prov(system, cur_user, schema, max_tokens)
+            text, tin, tout = self._call_with_backoff(prov, system, cur_user, schema, max_tokens, tag)
             secs = time.time() - t
             usd = tin / 1e6 * self.p.price_in + tout / 1e6 * self.p.price_out
             self.budget.charge(self.role, tin, tout, usd, secs, cached=False)
@@ -249,6 +319,23 @@ class LLM:
                 cur_user = (user + "\n\nYour previous reply did not match the required JSON schema:\n"
                             + last_err + "\nReply again with ONLY the corrected JSON object.")
         raise LLMError(f"[{self.role}/{tag}] schema validation failed twice: {last_err}")
+
+    def _call_with_backoff(self, prov, system, user, schema, max_tokens, tag, tries: int = 7):
+        delay = 8.0
+        for i in range(tries):
+            try:
+                with self._sem:
+                    return prov(system, user, schema, max_tokens)
+            except LLMError:
+                raise
+            except Exception as e:  # provider/network errors
+                if _is_throttle(e) and i < tries - 1:
+                    self._trace(tag, cached=False, tin=0, tout=0, secs=0.0, ok=False, note=f"throttled, retry in {delay:.0f}s")
+                    time.sleep(delay)
+                    delay = min(delay * 1.7, 90)
+                    continue
+                raise LLMError(f"{type(e).__name__}: {str(e)[:300]}") from e
+        raise LLMError("gave up after repeated throttling")
 
     def _trace(self, tag: str, **kw) -> None:
         if not self.trace_path:
