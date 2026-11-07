@@ -1,0 +1,2 @@
+# Fixtures test line-ending and BOM drift on purpose: keep their bytes exactly as written.
+* -text

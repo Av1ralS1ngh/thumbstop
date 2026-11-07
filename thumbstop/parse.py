@@ -159,11 +159,14 @@ def parse_episode(path: Path) -> Episode:
 
 
 def parse_show(folder: str | Path) -> Show:
+    from .ingest import SUFFIXES, load_episode  # ingest builds on this module; it sniffs each file's format
+
     folder = Path(folder)
-    files = sorted(p for p in folder.rglob("*.txt") if not p.name.startswith("."))
+    files = sorted(p for p in folder.rglob("*") if p.suffix.lower() in SUFFIXES and p.is_file()
+                   and not p.name.startswith("."))
     if not files:
-        raise ParseError(f"{folder}: no .txt screenplay files found")
-    episodes = [parse_episode(p) for p in files]
+        raise ParseError(f"{folder}: no episode files found (.txt screenplay or transcript, .srt, .vtt)")
+    episodes = [load_episode(p) for p in files]
     episodes.sort(key=lambda e: e.num)
     nums = [e.num for e in episodes]
     if len(set(nums)) != len(nums):

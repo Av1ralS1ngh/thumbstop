@@ -1,0 +1,128 @@
+EPISODE NUMBER: Episode 8
+EPISODE LOGLINE: Nadia proves the necklace was planted, and HR director Priya agrees to talk, until a crash cuts her off.
+CONTINUITY NOTES: Picking up at the Episode 7 cliffhanger: the sapphire glints inside Nadia's handbag.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: EXT. KELLAN ESTATE – GARDEN TERRACE – NIGHT
+Scene start: 00:00.00
+Scene end: 00:36.26
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:02.40)
+Close-up on the sapphire necklace in Nadia's open bag.
+
+**ACTION:**
+Start: (00:00.00) | End: (00:04.40)
+Nadia lifts the necklace out and holds it up for the crowd to see.
+
+**NADIA (Cold, Steady):**
+Start: (00:04.70) | End: (00:09.24)
+"Yes, it's in my bag. Now ask how it got there."
+
+**GRANT (The Smiling CFO) (Cold):**
+Start: (00:09.64) | End: (00:13.50)
+"Thieves always have a story. Call the police, Arthur."
+
+**NADIA (Commanding):**
+Start: (00:13.90) | End: (00:18.10)
+"Theo, the terrace cameras. Put them on the big screen."
+
+**ACTION:**
+Start: (00:18.50) | End: (00:22.30)
+Theo taps his phone; the party slideshow switches to security footage.
+
+**CAMERA:**
+Start: (00:22.60) | End: (00:25.00)
+On screen, Selene's hand slips the necklace into Nadia's bag during the hug.
+
+**SOUND FX:**
+Start: (00:22.60) | End: (00:24.60)
+The crowd gasps.
+
+**ARTHUR (Furious):**
+Start: (00:22.60) | End: (00:25.10)
+"Selene! In my own house!"
+
+**SELENE (Panicking):**
+Start: (00:25.50) | End: (00:28.68)
+"That footage is fake! Grant, tell them!"
+
+**GRANT (The Smiling CFO) (Smooth):**
+Start: (00:29.08) | End: (00:32.26)
+"I've never seen this woman before tonight."
+
+**ACTION:**
+Start: (00:32.66) | End: (00:36.26)
+Selene stares at Grant, realizing he has just abandoned her.
+
+SCENE 02
+Scene heading: INT. KELLAN ESTATE – SERVICE CORRIDOR – NIGHT
+Scene start: 00:36.56
+Scene end: 01:07.04
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:36.56) | End: (00:38.96)
+A narrow corridor lit by a single bulb.
+
+**ACTION:**
+Start: (00:36.56) | End: (00:40.56)
+Priya Desai corners Nadia by the kitchen door, glancing over her shoulder.
+
+**PRIYA (Nervous, Whispering):**
+Start: (00:40.86) | End: (00:45.40)
+"If he can drop Selene that fast, he'll drop me next."
+
+**NADIA (Wary):**
+Start: (00:45.80) | End: (00:50.00)
+"Then help me before he does. What do you know?"
+
+**PRIYA (Fearful):**
+Start: (00:50.40) | End: (00:54.26)
+"Grant doesn't sign the transfers. He only collects them."
+
+**NADIA (Shocked):**
+Start: (00:54.66) | End: (00:56.82)
+"Then who signs them?"
+
+**THEO (O.S.) (Pleading):**
+Start: (00:57.22) | End: (01:01.08)
+"Nadia, where are you? We need to go, now!"
+
+**PRIYA (Hurried):**
+Start: (01:01.48) | End: (01:07.04)
+"Meet me at the Pier Street garage in an hour. I'll bring the originals."
+
+SCENE 03
+Scene heading: EXT. PIER STREET – NIGHT
+Scene start: 01:07.44
+Scene end: 01:18.30
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (01:07.44) | End: (01:09.84)
+Rain on a deserted street; Priya hurries toward her car.
+
+**PRIYA (On phone) (Urgent):**
+Start: (01:07.44) | End: (01:11.64)
+"Nadia, I'm here. It isn't Grant who signs them. It's—"
+
+**SOUND FX:**
+Start: (01:12.04) | End: (01:14.04)
+Headlights flare; tires screech; a violent crash of metal and glass.
+
+**NADIA (V.O.) (Screaming):**
+Start: (01:12.04) | End: (01:15.90)
+"Priya? Priya! Can you hear me? Who signs them?"
+
+**SOUND FX:**
+Start: (01:16.30) | End: (01:18.30)
+Ominous swell. The line goes dead.
+
+--- SCRIPT END ---

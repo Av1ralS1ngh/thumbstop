@@ -1,0 +1,120 @@
+EPISODE NUMBER: Episode 5
+EPISODE LOGLINE: Nadia walks into the board meeting as Theo's consultant and accuses Grant to his face.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. MERIDIAN CREST TOWER – BOARDROOM – DAY
+Scene start: 00:00.00
+Scene end: 01:04.10
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:02.40)
+A long glass table, twelve directors, the city skyline behind them.
+
+**GRANT (Confident):**
+Start: (00:00.00) | End: (00:04.54)
+"The pension shortfall is fully explained. The thief has been arrested."
+
+**SOUND FX:**
+Start: (00:04.94) | End: (00:06.94)
+The double doors swing open.
+
+**ACTION:**
+Start: (00:04.94) | End: (00:09.14)
+Nadia strides in wearing a tailored grey suit, Theo one step behind her.
+
+**CAMERA:**
+Start: (00:09.44) | End: (00:11.84)
+Grant's coffee cup stops halfway to his lips.
+
+**NADIA (Cold, Commanding):**
+Start: (00:09.44) | End: (00:13.64)
+"The thief is sitting at the head of this table."
+
+**GRANT (Outraged):**
+Start: (00:14.04) | End: (00:17.90)
+"Security! This woman is out on bail for fraud!"
+
+**ARTHUR (Commanding):**
+Start: (00:18.30) | End: (00:23.18)
+"Sit down, Grant. My son tells me she has something worth hearing."
+
+**GRANT (Stunned):**
+Start: (00:23.58) | End: (00:25.06)
+"Your... son?"
+
+**THEO (Calm):**
+Start: (00:25.46) | End: (00:28.98)
+"Hello, Grant. I fixed your printer last Tuesday."
+
+**ACTION:**
+Start: (00:29.38) | End: (00:33.78)
+Nadia slides a folder of transfer records down the glass table to the chairman.
+
+**NADIA (Steady):**
+Start: (00:34.08) | End: (00:37.94)
+"Twelve transfers. Forty-eight million. All approved with Grant's code."
+
+**PRIYA (Sharp):**
+Start: (00:38.34) | End: (00:43.90)
+"Approval codes can be stolen. HR has a whole file on Miss Okonjo's debts."
+
+**NADIA (Defiant):**
+Start: (00:44.30) | End: (00:49.86)
+"My only debt is my mother's rent, Priya. And Grant just bought her building."
+
+**ACTION:**
+Start: (00:50.26) | End: (00:53.46)
+A director gasps; murmurs ripple around the table.
+
+**GRANT (Smiling, Venomous):**
+Start: (00:53.76) | End: (00:58.30)
+"Anyone can print a spreadsheet, Arthur. Where is the original ledger?"
+
+**CAMERA:**
+Start: (00:58.70) | End: (01:01.10)
+Close-up on Nadia as she glances at Theo.
+
+**THEO (Quiet):**
+Start: (00:58.70) | End: (01:01.20)
+"The original is somewhere safe."
+
+**ARTHUR (Grave):**
+Start: (01:01.60) | End: (01:04.10)
+"Somewhere safe is not evidence."
+
+SCENE 02
+Scene heading: INT. MERIDIAN CREST TOWER – BOARDROOM – CONTINUOUS
+Scene start: 01:04.50
+Scene end: 01:30.30
+
+Actions and dialogue:
+
+**ACTION:**
+Start: (01:04.50) | End: (01:07.90)
+Arthur rises from his chair; the room falls silent.
+
+**ARTHUR (Cold):**
+Start: (01:08.20) | End: (01:13.42)
+"Miss Okonjo, you have accused my CFO in front of my entire board."
+
+**ARTHUR (Deadly):**
+Start: (01:13.82) | End: (01:18.70)
+"You have until Friday to put the real ledger on this table."
+
+**NADIA (Determined):**
+Start: (01:19.10) | End: (01:21.26)
+"And if I can't?"
+
+**ARTHUR (Chilling):**
+Start: (01:21.66) | End: (01:27.90)
+"Then I will press charges myself, and my son will never work in this city again."
+
+**SOUND FX:**
+Start: (01:28.30) | End: (01:30.30)
+Ominous sting. Hold on Grant's slow smile.
+
+--- SCRIPT END ---

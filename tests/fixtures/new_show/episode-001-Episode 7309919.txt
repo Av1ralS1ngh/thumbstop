@@ -1,0 +1,137 @@
+EPISODE NUMBER: Episode 1
+EPISODE LOGLINE: Junior auditor Nadia Okonjo exposes a pension theft at the company gala, and the CFO frames her for it.
+CONTINUITY NOTES: Opening episode.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. MERIDIAN CREST TOWER – GALA BALLROOM – NIGHT
+Scene start: 00:00.00
+Scene end: 01:01.32
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:02.40)
+Wide shot of a glittering corporate gala; a banner reads MERIDIAN CREST: TWENTY YEARS OF TRUST.
+
+**ACTION:**
+Start: (00:00.00) | End: (00:04.40)
+Nadia, in a borrowed black dress, pushes through the crowd clutching a printed spreadsheet.
+
+**NADIA (Urgent, Low):**
+Start: (00:04.70) | End: (00:10.26)
+"Mr. Voss, four million dollars left the pension fund last night. I traced it."
+
+**CAMERA:**
+Start: (00:10.66) | End: (00:13.06)
+Close-up on Grant Voss, his smile freezing.
+
+**GRANT (Smooth, Cold):**
+Start: (00:10.66) | End: (00:14.52)
+"Not here, Miss Okonjo. Smile. The board is watching."
+
+**NADIA (Defiant):**
+Start: (00:14.92) | End: (00:19.80)
+"Then let them watch. The transfer has your approval code on it."
+
+**ACTION:**
+Start: (00:20.20) | End: (00:24.60)
+Grant grabs the spreadsheet from her hand and raises it high above his head.
+
+**GRANT (Shouting):**
+Start: (00:24.90) | End: (00:29.44)
+"Everyone! Our junior auditor has been stealing from the pension fund!"
+
+**SOUND FX:**
+Start: (00:29.84) | End: (00:31.84)
+The music cuts out. A glass shatters on the marble floor.
+
+**CAMERA:**
+Start: (00:29.84) | End: (00:32.24)
+Slow push-in on Nadia as two hundred faces turn toward her.
+
+**NADIA (Shocked):**
+Start: (00:29.84) | End: (00:34.38)
+"That's a lie! I found the theft, I didn't commit it!"
+
+**ACTION:**
+Start: (00:34.78) | End: (00:39.78)
+Selene March steps out of the crowd in a white gown and slaps Nadia across the face.
+
+**SELENE (Cruel, Mocking):**
+Start: (00:40.08) | End: (00:45.30)
+"Ten years of friendship, Nadia, and you rob the people who fed you?"
+
+**NADIA (Horrified):**
+Start: (00:45.70) | End: (00:50.24)
+"Selene... you know me. You know I would never do this."
+
+**GRANT (Commanding):**
+Start: (00:50.64) | End: (00:53.82)
+"Security! Get her out of my building!"
+
+**ACTION:**
+Start: (00:54.22) | End: (00:59.02)
+Two guards seize Nadia's arms and drag her toward the service exit as phones record her.
+
+**SOUND FX:**
+Start: (00:59.32) | End: (01:01.32)
+Camera shutters click like rain.
+
+SCENE 02
+Scene heading: EXT. MERIDIAN CREST TOWER – LOADING DOCK – NIGHT
+Scene start: 00:59.32
+Scene end: 01:42.30
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:59.32) | End: (01:01.72)
+Overhead shot of rain hammering the loading dock.
+
+**ACTION:**
+Start: (00:59.32) | End: (01:03.92)
+The guards shove Nadia onto the wet concrete and slam the steel door behind her.
+
+**NADIA (Broken, Whispering):**
+Start: (01:04.22) | End: (01:07.40)
+"Twenty years of trust. What a joke."
+
+**ACTION:**
+Start: (01:07.80) | End: (01:13.20)
+A hooded man steps out of the shadows holding an umbrella. It is Theo Kellan, the quiet IT contractor.
+
+**THEO (Calm):**
+Start: (01:13.50) | End: (01:18.72)
+"You weren't wrong about the four million. It was only the first transfer."
+
+**NADIA (Suspicious):**
+Start: (01:19.12) | End: (01:23.32)
+"Who are you? Why would the IT guy know that?"
+
+**CAMERA:**
+Start: (01:23.72) | End: (01:26.12)
+Close-up on a silver USB drive in Theo's palm.
+
+**THEO (Quiet, Urgent):**
+Start: (01:23.72) | End: (01:29.28)
+"Because I copied his private ledger before he wiped it. There are eleven more."
+
+**NADIA (Desperate):**
+Start: (01:29.68) | End: (01:32.52)
+"Then give it to the police!"
+
+**THEO (Grim):**
+Start: (01:32.92) | End: (01:39.50)
+"The police chief was at that gala. Server room, before midnight, or the backups are gone forever."
+
+**SOUND FX:**
+Start: (01:39.90) | End: (01:41.90)
+An ominous sting as the tower lights go dark floor by floor.
+
+**CAMERA:**
+Start: (01:39.90) | End: (01:42.30)
+Hold on Nadia's face, rain and mascara running.
+
+--- SCRIPT END ---
