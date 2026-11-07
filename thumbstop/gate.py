@@ -190,7 +190,11 @@ def repair_one(show: Show, anns, p: Promo, repair_llm: LLM, gate_llm: LLM, max_r
         b, s0, s1 = opts[choice.choice]
         setup = make_segment(show.ep(b.ep), s0, s1)
         main = cur.segments[-1]
-        budget = MAX_LEN - setup.dur
+        earlier = cur.segments[:-1]            # keep setups added in earlier rounds
+        if len(earlier) + 2 > 3:
+            log.append({"round": rnd, "action": "segment_limit"})
+            break
+        budget = MAX_LEN - setup.dur - sum(s.dur for s in earlier)
         if main.dur > budget:  # tighten the main segment from the front, keeping the cliffhanger end
             ep = show.ep(main.ep)
             later = [u for u in ep.cut_units if u.t0 >= main.end - budget and u.t0 < main.end - 15]
@@ -198,12 +202,18 @@ def repair_one(show: Show, anns, p: Promo, repair_llm: LLM, gate_llm: LLM, max_r
                 log.append({"round": rnd, "action": "no_room"})
                 break
             main = make_segment(ep, later[0].t0, main.end)
-        segs = ([setup] if setup.ep < main.ep or setup.end <= main.start else []) + [main]
+        story = sorted(earlier + [setup], key=lambda s: (s.ep, s.start))
+        if not all(s.ep < main.ep or s.end <= main.start for s in story):
+            log.append({"round": rnd, "action": "setup_after_main"})
+            break
+        segs = story + [main]
         # A setup may open the promo only if it is itself a strong hook beat; otherwise the original
         # hook must still land within 3 s (validator enforces), so only very short setups survive.
-        setup_is_hook = any(h.beat_id == b.id and h.strength >= 2 for h in anns[b.ep].hooks) if b.ep in anns else False
+        opener = show.beat(segs[0].first_beat)
+        opener_is_hook = bool(opener) and opener.ep in anns and any(
+            h.beat_id == opener.id and h.strength >= 2 for h in anns[opener.ep].hooks)
         cand = replace(cur, id=p.id + "R", source="repaired", segments=segs,
-                       hook_beat=b.id if (len(segs) > 1 and setup_is_hook) else cur.hook_beat)
+                       hook_beat=opener.id if opener_is_hook else cur.hook_beat)
         errs = validate(show, cand)
         if errs:
             log.append({"round": rnd, "action": "invalid", "errors": errs})
