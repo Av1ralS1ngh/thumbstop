@@ -101,5 +101,24 @@ def main(argv=None) -> int:
     return 0
 
 
+def cli() -> int:
+    """Entry point: input and model problems print one clear line instead of a traceback."""
+    from .llm import BudgetExceeded, LLMError
+    from .parse import ParseError
+
+    try:
+        return main()
+    except ParseError as e:
+        print(f"\nINPUT ERROR: {e}\nNothing was produced. Fix the file above (or pass a different folder) and re-run.",
+              file=sys.stderr)
+        return 2
+    except BudgetExceeded as e:
+        print(f"\nBUDGET STOP: {e}. Raise it with --budget-usd, or re-run (finished calls are cached).", file=sys.stderr)
+        return 3
+    except LLMError as e:
+        print(f"\nMODEL ERROR: {e}\nTry --offline, or another --profile.", file=sys.stderr)
+        return 4
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli())
