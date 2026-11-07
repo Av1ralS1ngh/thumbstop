@@ -61,6 +61,8 @@ def _human_clip(show: Show, anns, p: Promo) -> str:
 
 
 def build(pack: str, run_dir: Path, router: Router) -> None:
+    import subprocess
+    commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
     show, anns, cands, scores = _load(pack, run_dir)
     rng = random.Random(SEED)
     out = ROOT / "labels"
@@ -105,6 +107,7 @@ def build(pack: str, run_dir: Path, router: Router) -> None:
         key[tid] = {"ABC"[i]: {"design": d, "promo": p.to_dict(), "valid": not validate(show, p)}
                     for i, (d, p) in enumerate(clips)}
     rng.shuffle(tasks)
+    key["__meta"] = {"frozen_commit": commit, "seed": SEED, "test_episodes": TEST_EPS, "design_episodes": DESIGN_EPS}
     (out / "blind_key.json").write_text(json.dumps(key, indent=1))
     (out / "blind_tasks.json").write_text(json.dumps(tasks, indent=1))
     (out / "blind.html").write_text(blind_html(tasks))
@@ -114,18 +117,30 @@ def build(pack: str, run_dir: Path, router: Router) -> None:
     # AI judge on every clip in the blind set (second rater) + controls (judge calibration)
     print("AI judge (cold viewer) on blind clips and controls ...")
     judge = router["gate"]
-    judged = {}
+    from concurrent.futures import ThreadPoolExecutor
+    jobs = []
     for tid, m in key.items():
+        if tid.startswith('__'):
+            continue
         for lab, info in m.items():
             p = promo_from_dict(info["promo"])
             p.id = f"{tid}-{lab}"
-            judged[p.id] = {"design": info["design"], **gate_one(show, anns, p, judge)}
-    controls = build_controls(show, cands, scores, rng)
-    ctrl = []
-    for kind, p in controls:
-        v = gate_one(show, anns, p, judge)
-        ctrl.append({"kind": kind, "id": p.id, **{k: v.get(k) for k in ("passed", "hook_score", "cliff_score",
-                                                                        "standalone_score")}})
+            jobs.append(("blind", info["design"], p))
+    for kind, p in build_controls(show, cands, scores, rng):
+        jobs.append(("control", kind, p))
+    def _j(job):
+        try:
+            return job, gate_one(show, anns, job[2], judge)
+        except Exception as e:  # keep going; report the gap
+            return job, {"error": str(e)[:200]}
+    judged, ctrl = {}, []
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        for (where, label, p), v in ex.map(_j, jobs):
+            if where == "blind":
+                judged[p.id] = {"design": label, **v}
+            else:
+                ctrl.append({"kind": label, "id": p.id, **{k: v.get(k) for k in ("passed", "hook_score", "cliff_score",
+                                                                                "standalone_score")}})
     (out / "ai_judge.json").write_text(json.dumps({"blind": judged, "controls": ctrl}, indent=1))
     print(control_report(ctrl))
 
