@@ -11,6 +11,7 @@ from .models import Beat, Episode, Segment, Show, fmt_ts
 MIN_LEN, MAX_LEN = 20.0, 60.0
 HOOK_WINDOW = 3.0          # hook beat must start within 3 s of promo start
 OVERLAP_TOL = 0.4          # dialogue may overlap a cut point by this much without counting as mid-line
+END_SNAP = 3.0             # an end inside a spoken line may be pushed to the line's end by at most this
 TIGHT_MAX = 32.0
 
 
@@ -70,7 +71,7 @@ def check_cut(ep: Episode, start: float, end: float) -> tuple[float, float, list
         if d.t0 < start - OVERLAP_TOL and d.t1 > start + OVERLAP_TOL:
             issues.append(f"MID_LINE_START:{d.id}")
         if d.t0 < end - OVERLAP_TOL and d.t1 > end + OVERLAP_TOL:
-            if d.t1 - end <= 3.0:
+            if d.t1 - end <= END_SNAP:
                 end = d.t1
                 issues.append(f"END_EXTENDED_TO:{d.id}")
             else:
@@ -132,7 +133,9 @@ def validate(show: Show, p: Promo, lo: float = MIN_LEN, hi: float = MAX_LEN) -> 
             errs.append(f"HOOK_TOO_LATE:{off:.1f}s")
     cb = show.beat(p.cliff_beat)
     last = p.segments[-1]
-    if cb is None or cb.ep != last.ep or not (last.start <= cb.t0 <= last.end):
+    # the cliff beat must be the clip's ending: only an END_EXTENDED snap may run past it
+    if cb is None or cb.ep != last.ep or not (last.start <= cb.t0 <= last.end) \
+            or cb.t1 < last.end - END_SNAP - 0.01:
         errs.append("CLIFF_NOT_AT_END")
     return errs
 

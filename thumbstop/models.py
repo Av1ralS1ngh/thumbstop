@@ -14,13 +14,10 @@ def fmt_ts(t: float) -> str:
 
 
 def fmt_tc(t: float, fps: int = 30) -> str:
-    """Seconds -> HH:MM:SS:FF editor timecode."""
-    t = max(t, 0.0)
-    h, rem = divmod(int(t), 3600)
-    m, s = divmod(rem, 60)
-    f = int(round((t - int(t)) * fps))
-    if f >= fps:
-        f = fps - 1
+    """Seconds -> HH:MM:SS:FF editor timecode (nearest frame, non-drop)."""
+    s, f = divmod(int(round(max(t, 0.0) * fps)), fps)
+    h, s = divmod(s, 3600)
+    m, s = divmod(s, 60)
     return f"{h:02d}:{m:02d}:{s:02d}:{f:02d}"
 
 

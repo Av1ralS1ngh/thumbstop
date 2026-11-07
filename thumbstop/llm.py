@@ -137,10 +137,12 @@ def _wait_turn(model_id: str, rpm: float | None) -> None:
         time.sleep(slot - now)
 
 
+_THROTTLE_RX = re.compile(r"throttl|too many requests|rate ?limit|serviceunavailable|overloaded|\b(?:429|529)\b")
+
+
 def _is_throttle(e: Exception) -> bool:
-    t = f"{type(e).__name__} {e}".lower()
-    return any(k in t for k in ("throttl", "too many requests", "rate limit", "ratelimit", "429", "serviceunavailable",
-                                "overloaded", "529"))
+    """Status codes must stand alone: '429' inside a request id or a token count is not throttling."""
+    return bool(_THROTTLE_RX.search(f"{type(e).__name__} {e}".lower()))
 
 
 # ---------------------------------------------------------------- providers
