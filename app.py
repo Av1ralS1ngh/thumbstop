@@ -21,11 +21,13 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
-from thumbstop.llm import Router, load_config
+from thumbstop.llm import Budget, Router, load_config
 from thumbstop.models import fmt_ts
 from thumbstop.pipeline import Options, run
 
+RECORDED = "Recorded AI run on the demo (Claude Opus 4.6 + GPT-OSS-120B, no key)"
 OFFLINE = "Offline (rules only, no key)"
 BEDROCK = "AWS Bedrock (your AWS credentials)"
 CUSTOM = "Any OpenAI-compatible API"
@@ -35,6 +37,12 @@ OUTPUTS = {"promos.csv": "text/csv", "promos.json": "application/json", "selects
            "review.html": "text/html"}
 MAX_FILES, MAX_UNZIPPED = 1000, 200 * 1024 * 1024
 EPISODE_SUFFIXES = (".txt", ".srt", ".vtt")   # same formats the CLI reads
+DEMO_ANSWERS = Path(__file__).resolve().parent / "demo_answers.json"   # written by record_demo.py
+
+
+def recorded_options() -> Options:
+    """The settings the demo answers were recorded with (the app's defaults); other settings would ask new questions."""
+    return Options(top=20, gate_n=40, repair=True, episodes=None, min_len=20.0, max_len=60.0, seeds=True)
 
 # ---------------------------------------------------------------- demo show (original fiction)
 DEMO_NAME = "The Forty-Third Floor (demo)"
@@ -245,8 +253,15 @@ def execute(mode: str, env: dict[str, str | None], opt: Options, zip_bytes: byte
         folder = write_demo_show(work / "in") if zip_bytes is None else extract_zip(zip_bytes, work / "in", show_name)
         out = work / "out"
         with (_env_lock() if env else contextlib.nullcontext()), scoped_env(env):
-            router = Router(load_config(), single={OFFLINE: "rules", CUSTOM: "custom"}.get(mode), out_dir=out)
+            budget = Budget(max_calls=0, max_usd=0.0) if mode == RECORDED else None   # replay only, never a live call
+            router = Router(load_config(), single={OFFLINE: "rules", CUSTOM: "custom"}.get(mode), out_dir=out, budget=budget)
             router.cache_dir = work / "cache"   # nothing derived from the scripts outlives the run
+            if mode == RECORDED:
+                import diskcache
+
+                with diskcache.Cache(str(router.cache_dir)) as cache:
+                    for k, v in json.loads(DEMO_ANSWERS.read_text(encoding="utf-8")).items():
+                        cache.set(k, v)
             same_family = mode != OFFLINE and router["annotate"].family == router["gate"].family
             run(folder, out, router, opt, log=log)
         return {"doc": json.loads((out / "promos.json").read_text(encoding="utf-8")), "same_family": same_family,
@@ -298,6 +313,7 @@ box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
 .st-key-ts_input [role="radiogroup"] label:has(input:checked){background:rgba(255,248,235,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
 .st-key-ts_input [role="radiogroup"] label > div:first-child{display:none}
 [data-testid="stDataFrame"]{border-radius:14px;overflow:hidden}
+.stApp iframe{border-radius:24px;border:1px solid rgba(255,240,220,.12)!important;box-shadow:0 30px 60px -32px rgba(0,0,0,.85)}
 [data-testid="stAlert"]{border-radius:16px}
 /* hero */
 .ts-hero{padding:8px 0 10px}
@@ -413,16 +429,6 @@ def cold_viewer(rec: dict) -> str:
     return {True: "pass", False: "fail"}.get(cv.get("passed"), "not checked" if not cv else "error")
 
 
-def pick_card(r: dict, reason: str) -> str:
-    segs = "".join(f'<span class="ts-tc">E{s["episode"]} {s["in_ts"]} → {s["out_ts"]}</span>' for s in r["segments"])
-    return f"""<article class="ts-pick ts-glass">
- <div class="top"><span class="ts-rank"><small>#</small>{r['rank']}</span><span class="ts-id">{esc(r['id'])} · {r['duration_s']:.0f}s</span></div>
- <div class="ts-segs">{segs}</div>
- <div class="ts-q"><span class="ts-lbl">Hook</span><p>{esc(r['hook'])}</p></div>
- <div class="ts-q cliff"><span class="ts-lbl">Cliffhanger</span><p>{esc(r['cliffhanger'])}</p></div>
- <p class="ts-why"><b>Why first:</b> {esc(reason)}</p></article>"""
-
-
 def cut_sheet_html(r: dict) -> str:
     segs = r["cut_sheet"]["segments"]
     film = "".join(f'<div style="flex:{max(s["dur_s"], 1):.2f}"><b>E{s["episode"]} · {s["dur_s"]:.1f}s</b>'
@@ -450,9 +456,14 @@ def sidebar() -> tuple[str, dict[str, str | None], Options] | None:
     sb = st.sidebar
     sb.html(f'<div class="ts-brand"><span class="ts-logo">{LOGO}</span><b>Thumbstop</b></div>')
     sb.header("Model")
-    mode = sb.radio("Model", [OFFLINE, BEDROCK, CUSTOM], label_visibility="collapsed", key="mode")
+    modes = ([RECORDED] if DEMO_ANSWERS.exists() else []) + [OFFLINE, BEDROCK, CUSTOM]
+    mode = sb.radio("Model", modes, label_visibility="collapsed", key="mode")
     env: dict[str, str | None] = {}
-    if mode == BEDROCK:
+    if mode == RECORDED:
+        sb.caption("The real pipeline runs every step live, on answers Claude Opus 4.6 and GPT-OSS-120B gave for the "
+                   "demo show in a recorded run, so it works with no key. It covers the demo show at default settings. "
+                   "To run your own scripts, pick AWS Bedrock or another API.")
+    elif mode == BEDROCK:
         roles = load_config().get("roles", {})
         sb.caption("Uses the roles in config.yaml: " + ", ".join(f"{r}={p}" for r, p in roles.items()))
         env["AWS_REGION"] = sb.text_input("AWS region", value=os.environ.get("AWS_REGION", "us-east-1"),
@@ -487,6 +498,8 @@ def sidebar() -> tuple[str, dict[str, str | None], Options] | None:
     if mode == CUSTOM and not (env["LLM_BASE_URL"] and env["LLM_MODEL"]):
         sb.warning("Enter the base URL and model to use this option.")
         return None
+    if mode == RECORDED:
+        return mode, env, recorded_options()
     opt = Options(top=int(top), gate_n=max(12, int(top) + 4) if fast else max(40, int(top) + 4), repair=not fast, episodes=episodes,
                   min_len=float(lo), max_len=float(hi), seeds=not fast)
     return mode, env, opt
@@ -511,15 +524,11 @@ def show_results(res: dict) -> None:
         st.warning("No clip passed the hard rules (length, hook in 3 s, cliffhanger at the end, no mid-line cuts). "
                    "Try a wider length range or more episodes.")
         return
-    by_id = {r["id"]: r for r in recs}
+    section("Watch them", "Every promo, playable",
+            "Press play on any promo to watch it run from the script, then accept, nudge or reject it as the editor would.")
+    components.html(res["files"]["review.html"].decode("utf-8"), height=1180, scrolling=True)
 
-    section("Start here", "Post these first", "Early episodes, different hook types, no policy hold and no spoilers.")
-    if not picks:
-        st.info("No promo qualified to post first (all are late-season, on policy hold, or failed the cold viewer).")
-    else:
-        st.html('<div class="ts-picks">' + "".join(pick_card(by_id[p["id"]], p["reason"]) for p in picks) + "</div>")
-
-    section("Everything", "Ranked promos", "Best first. Scroll sideways for the reason each one works.")
+    section("Everything", "Ranked table", "The same promos as a table. Scroll sideways for the reason each one works.")
     with st.container(key="ts_table"):
         st.dataframe([{
             "Rank": r["rank"], "Segments": seg_label(r), "Length (s)": r["duration_s"], "Hook": r["hook"],
@@ -535,7 +544,7 @@ def show_results(res: dict) -> None:
 
     section("For the editor", "Cut sheets", "Timecodes at 30 fps from the script timestamps, so confirm them on picture.")
     for r in recs:
-        with st.expander(f"#{r['rank']}  {r['id']}  ·  {r['duration_s']:.0f}s  ·  {seg_label(r)}", expanded=r["rank"] == 1):
+        with st.expander(f"#{r['rank']}  {r['id']}  ·  {r['duration_s']:.0f}s  ·  {seg_label(r)}", expanded=False):
             st.html(cut_sheet_html(r))
             st.code("\n".join(r["cut_sheet"]["paper_edit"]), language=None)
 
@@ -558,7 +567,9 @@ def main() -> None:
         upload = None
         if source == UPLOAD:
             upload = st.file_uploader("Episode files (.zip of .txt screenplays, .srt or .vtt)", type=["zip"], key="upload")
-        ready = settings is not None and (source == DEMO or upload is not None)
+        if settings is not None and settings[0] == RECORDED and source == UPLOAD:
+            st.info("The recorded AI run only covers the demo show. Pick a model in the sidebar to run your own scripts.")
+        ready = settings is not None and (source == DEMO or (upload is not None and settings[0] != RECORDED))
         clicked = st.button("Find promos", type="primary", disabled=not ready, key="run")
     # ?demo=1 runs the demo once on arrival, so a shared link opens straight onto results
     auto = (st.query_params.get("demo") == "1" and source == DEMO and ready

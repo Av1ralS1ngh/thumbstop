@@ -20,12 +20,32 @@ def _load_app_module():
     return mod
 
 
-def test_offline_demo_run_shows_ranked_table():
+def _run_demo(mode_prefix: str):
     at = AppTest.from_file(str(APP), default_timeout=120).run()
     assert not at.exception
-    assert at.sidebar.radio(key="mode").value.startswith("Offline")
+    radio = at.sidebar.radio(key="mode")
+    radio.set_value(next(o for o in radio.options if o.startswith(mode_prefix))).run()
     assert at.radio(key="source").value.startswith("Demo")
     at.button(key="run").click().run()
+    assert not at.exception, [e.value for e in at.exception]
+    assert not at.error, [e.value for e in at.error]
+    return at
+
+
+def test_recorded_ai_demo_replays_with_no_key_or_network(monkeypatch):
+    for k in ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("AWS_PROFILE", "no-such-profile")   # any live call would fail; the budget is 0 anyway
+    at = AppTest.from_file(str(APP), default_timeout=120).run()
+    assert at.sidebar.radio(key="mode").value.startswith("Recorded")   # the default a visitor sees
+    at = _run_demo("Recorded")
+    doc = at.session_state["result"]["doc"]
+    assert doc["promos"] and doc["meta"]["usage"]["calls"] == 0 and doc["meta"]["usage"]["cache_hits"] > 0
+    assert "opus" in str(doc["meta"]["models"]) and all("(rules)" not in (r["why_it_works"] or "") for r in doc["promos"])
+
+
+def test_offline_demo_run_shows_ranked_table():
+    at = _run_demo("Offline")
     assert not at.exception, [e.value for e in at.exception]
     assert not at.error, [e.value for e in at.error]
     ranked = [df.value for df in at.dataframe if "Cliffhanger" in df.value.columns]
