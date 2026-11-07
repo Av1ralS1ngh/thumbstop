@@ -13,10 +13,10 @@
 <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body class="tsr-page app">
-<header class="nav">
+<header class="topbar" id="topbar"><div class="nav">
   <a class="logo" href="/"><span class="tsr-mark"></span><b>Thumbstop</b></a>
-  <nav><a href="#how">How it works</a><a href="https://github.com/Av1ralS1ngh/thumbstop" target="_blank" rel="noopener">GitHub ↗</a></nav>
-</header>
+  <nav aria-label="Sections"><a href="#run" data-nav="run">Try it</a><a href="#how" data-nav="how">How it works</a><a href="#results" data-nav="results" id="nav-results" hidden>Results</a><a class="gh" href="https://github.com/Av1ralS1ngh/thumbstop" target="_blank" rel="noopener">GitHub ↗</a></nav>
+</div></header>
 
 <main>
   <section class="hero">
@@ -53,7 +53,8 @@
       </div>
       <div class="field">
         <div class="field-l">Model</div>
-        <div class="modes" id="modes" role="radiogroup" aria-label="Model"></div>
+        <div class="modes two" id="modes" role="radiogroup" aria-label="Model"></div>
+        <details class="more" id="more"><summary>Use your own model</summary><div class="modes" id="modes-more"></div></details>
       </div>
       <div class="keys" id="keys-bedrock" hidden>
         <label>AWS region<input name="region" value="us-east-1" autocomplete="off"></label>

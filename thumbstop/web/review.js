@@ -34,7 +34,7 @@
       load();
       speechSynthesis.addEventListener ? speechSynthesis.addEventListener("voiceschanged", load) : (speechSynthesis.onvoiceschanged = load);
     },
-    enabled() { return this.ready && store.get("tsr-voices", true); },
+    enabled() { return this.ready && store.get("tsr-voices", false); },
     set(v) { store.set("tsr-voices", !!v); if (!v) this.stop(); },
     pick(who, g) {
       const female = g === "F" || (g !== "M" && FEMALE_ROLE.test(who));
@@ -56,6 +56,121 @@
       speechSynthesis.speak(u);
     },
     stop() { if ("speechSynthesis" in window) speechSynthesis.cancel(); },
+  };
+
+
+  // ---------------------------------------------------------------- sound: a small trailer score, made in the browser
+  // No samples and no outside service. A low drone tightens toward the end, cuts whoosh, the hook lands on a hit, a
+  // heartbeat and a riser build into the cut to black, which lands on a "braam", and the script's own sound cues
+  // (a door, a slap, thunder, a gasp) get simple synthesized effects.
+  const Sound = {
+    ctx: null, out: null, noise: null, drone: null, subs: new Set(),
+    enabled() { return store.get("tsr-sound", true); },
+    set(v) { store.set("tsr-sound", !!v); if (!v) this.stopDrone(true); this.subs.forEach((f) => f()); },
+    ready() {
+      if (!this.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        const ctx = (this.ctx = new AC());
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -16; comp.ratio.value = 4;
+        this.out = ctx.createGain(); this.out.gain.value = 0.75;
+        this.out.connect(comp); comp.connect(ctx.destination);
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        this.noise = buf;
+      }
+      if (this.ctx.state === "suspended") this.ctx.resume();
+      return this.ctx;
+    },
+    env(g, t0, a, peak, hold, rel) {
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(peak, t0 + a);
+      g.gain.setValueAtTime(peak, t0 + a + hold);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + hold + rel);
+      return t0 + a + hold + rel;
+    },
+    burst({ type = "bandpass", f0 = 1000, f1 = 0, q = 1, a = 0.01, peak = 0.3, hold = 0, rel = 0.2, delay = 0 }) {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t0 = ctx.currentTime + delay;
+      const src = ctx.createBufferSource(); src.buffer = this.noise; src.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t0);
+      if (f1) f.frequency.exponentialRampToValueAtTime(f1, t0 + a + hold + rel);
+      const g = ctx.createGain(), end = this.env(g, t0, a, peak, hold, rel);
+      src.connect(f); f.connect(g); g.connect(this.out);
+      src.start(t0, Math.random()); src.stop(end + 0.05);
+    },
+    tone({ type = "sine", f0 = 110, f1 = 0, a = 0.005, peak = 0.5, hold = 0, rel = 0.4, delay = 0, detune = 0 }) {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t0 = ctx.currentTime + delay;
+      const o = ctx.createOscillator(); o.type = type; o.detune.value = detune; o.frequency.setValueAtTime(f0, t0);
+      if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + a + hold + rel);
+      const g = ctx.createGain(), end = this.env(g, t0, a, peak, hold, rel);
+      o.connect(g); g.connect(this.out); o.start(t0); o.stop(end + 0.05);
+    },
+    whoosh(big) { this.burst({ f0: 320, f1: big ? 3400 : 2300, q: 0.9, a: big ? 0.2 : 0.12, peak: big ? 0.3 : 0.13, rel: big ? 0.35 : 0.22 }); },
+    hit() { this.tone({ f0: 118, f1: 34, peak: 0.85, rel: 0.95 }); this.burst({ type: "lowpass", f0: 900, peak: 0.3, rel: 0.12 }); },
+    heartbeat() { this.tone({ f0: 64, f1: 46, peak: 0.5, rel: 0.17 }); this.tone({ f0: 58, f1: 43, peak: 0.34, rel: 0.19, delay: 0.21 }); },
+    riser(len) {
+      this.burst({ f0: 240, f1: 4600, q: 1.3, a: Math.max(0.3, len), peak: 0.2, rel: 0.04 });
+      this.tone({ type: "sawtooth", f0: 98, f1: 196, a: Math.max(0.3, len), peak: 0.045, rel: 0.04 });
+    },
+    braam() {
+      if (!this.ctx) return;
+      const ctx = this.ctx, t0 = ctx.currentTime;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 2.2;
+      f.frequency.setValueAtTime(160, t0); f.frequency.exponentialRampToValueAtTime(1200, t0 + 0.22); f.frequency.exponentialRampToValueAtTime(240, t0 + 2.4);
+      const g = ctx.createGain(), end = this.env(g, t0, 0.03, 0.3, 0.55, 1.9);
+      f.connect(g); g.connect(this.out);
+      [[55, -9], [55, 8], [82.41, -5], [110, 6]].forEach(([hz, det]) => {
+        const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz; o.detune.value = det;
+        o.connect(f); o.start(t0); o.stop(end + 0.05);
+      });
+      this.hit();
+    },
+    sfx(text) {
+      const s = String(text).toLowerCase();
+      if (/thunder|rumbl|storm|explo|cannon/.test(s)) return this.burst({ type: "lowpass", f0: 150, q: 0.7, a: 0.15, peak: 0.6, hold: 0.4, rel: 1.4 });
+      if (/glass|shatter|smash/.test(s)) { this.burst({ type: "highpass", f0: 2600, a: 0.004, peak: 0.36, rel: 0.55 }); return this.tone({ f0: 3100, peak: 0.05, rel: 0.4 }); }
+      if (/slap|smack|punch|strike|struck|whip|shove|blow/.test(s)) { this.burst({ f0: 2400, q: 0.8, a: 0.002, peak: 0.6, rel: 0.09 }); return this.tone({ f0: 140, f1: 60, peak: 0.4, rel: 0.15 }); }
+      if (/door|slam|knock|bang|thud|crash|fall|drop|thump|collaps/.test(s)) { this.tone({ f0: 92, f1: 44, peak: 0.7, rel: 0.32 }); return this.burst({ type: "lowpass", f0: 600, peak: 0.3, rel: 0.12 }); }
+      if (/footstep|step|boot|heel|gallop|hoof|hooves|march/.test(s)) { for (let i = 0; i < 4; i++) this.burst({ f0: 1300, q: 2, a: 0.003, peak: 0.24, rel: 0.05, delay: i * 0.32 }); return; }
+      if (/gasp|breath|sigh|sob|inhal|exhal|pant|whimper/.test(s)) return this.burst({ f0: 1100, q: 1.2, a: 0.08, peak: 0.16, rel: 0.26 });
+      if (/\bbells?\b|chime|toll/.test(s)) { [660, 1325, 1990].forEach((hz, i) => this.tone({ f0: hz, peak: 0.12 / (i + 1), rel: 2.2 })); return; }
+      if (/sword|blade|steel|dagger|unsheath|metal|clang|scrape/.test(s)) { this.burst({ type: "highpass", f0: 4500, a: 0.004, peak: 0.24, rel: 0.6 }); return this.tone({ f0: 2350, peak: 0.06, rel: 0.9 }); }
+      if (/rain|wind|gust|howl/.test(s)) return this.burst({ type: "lowpass", f0: 1400, q: 0.5, a: 0.4, peak: 0.12, hold: 0.8, rel: 0.8 });
+      if (/fire|crackl|flame/.test(s)) { for (let i = 0; i < 6; i++) this.burst({ type: "highpass", f0: 3000, a: 0.002, peak: 0.04 + Math.random() * 0.1, rel: 0.03, delay: Math.random() * 1.2 }); return; }
+      return this.burst({ f0: 800, f1: 1800, q: 0.8, a: 0.08, peak: 0.07, rel: 0.2 });
+    },
+    startDrone() {
+      if (this.drone || !this.ready()) return;
+      const ctx = this.ctx, t0 = ctx.currentTime;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 170; f.Q.value = 3;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.06, t0 + 1.2);
+      const oscs = [[55, "sawtooth", -6], [55, "sawtooth", 6], [82.41, "triangle", 0], [41.2, "sine", 0]].map(([hz, type, det]) => {
+        const o = ctx.createOscillator(); o.type = type; o.frequency.value = hz; o.detune.value = det; o.connect(f); o.start(t0); return o;
+      });
+      const lfo = ctx.createOscillator(), lg = ctx.createGain();
+      lfo.frequency.value = 0.17; lg.gain.value = 38; lfo.connect(lg); lg.connect(f.frequency); lfo.start(t0);
+      f.connect(g); g.connect(this.out);
+      this.drone = { f, g, oscs: oscs.concat(lfo) };
+    },
+    updateDrone(tension, duck) {
+      const d = this.drone;
+      if (!d) return;
+      tension = Math.min(1, Math.max(0, Number.isFinite(tension) ? tension : 0));
+      const t0 = this.ctx.currentTime;
+      d.f.frequency.setTargetAtTime(170 + 650 * Math.pow(tension, 1.6), t0, 0.3);
+      d.g.gain.setTargetAtTime((0.05 + 0.09 * tension) * (duck ? 0.45 : 1), t0, 0.2);
+    },
+    stopDrone(hard) {
+      const d = this.drone;
+      if (!d) return;
+      this.drone = null;
+      const t0 = this.ctx.currentTime, rel = hard ? 0.03 : 0.25;
+      d.g.gain.cancelScheduledValues(t0); d.g.gain.setValueAtTime(Math.max(0.0001, d.g.gain.value), t0); d.g.gain.linearRampToValueAtTime(0, t0 + rel);
+      d.oscs.forEach((o) => o.stop(t0 + rel + 0.05));
+    },
   };
 
   // ---------------------------------------------------------------- the phone player
@@ -90,7 +205,8 @@
   <button class="tsr-play" type="button" aria-label="Play"></button>
   <span class="tsr-time"><b>0:00</b> <span>/ ${mm(dur)}</span></span><span class="tsr-grow"></span>
   <button class="tsr-pill tsr-rate" type="button" title="Playback speed">1×</button>
-  <button class="tsr-pill tsr-voice" type="button" aria-pressed="false" hidden title="Read the lines aloud with your device's own voices">Voices</button>
+  <button class="tsr-ico tsr-sound" type="button" aria-pressed="true" aria-label="Score and sound effects"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4.2-3.2v11.4L6 12.5H3z" fill="currentColor"/><path class="on" d="M13.2 7.4a3.6 3.6 0 0 1 0 5.2M15.4 5.2a6.8 6.8 0 0 1 0 9.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="off" d="M13 7.5l4.6 5M17.6 7.5L13 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+  <button class="tsr-ico tsr-voice" type="button" aria-pressed="false" hidden aria-label="Read the lines aloud"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.2 4h11.6c.9 0 1.7.8 1.7 1.7v6.6c0 .9-.8 1.7-1.7 1.7H9.4L5.6 17v-3H4.2c-.9 0-1.7-.8-1.7-1.7V5.7C2.5 4.8 3.3 4 4.2 4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path class="on" d="M6.4 8h7.2M6.4 10.6h4.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path class="off" d="M3 3l14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
 </div>`;
   }
 
@@ -102,11 +218,25 @@
     const cap = $(".ph-cap"), whoEl = $(".ph-who"), lineEl = $(".ph-line"), bHook = $(".ph-badge.hook"), bCliff = $(".ph-badge.cliff");
     const cutEl = $(".ph-cutcard"), ring = $(".ph-ring"), ringFg = $(".ph-ring .fg"), bar = $(".ph-bar i");
     const scrub = $(".tsr-scrub"), fill = $(".sc-fill"), knob = $(".sc-knob"), playBtn = $(".tsr-play"), timeEl = $(".tsr-time b");
-    const rateBtn = $(".tsr-rate"), voiceBtn = $(".tsr-voice");
+    const rateBtn = $(".tsr-rate"), voiceBtn = $(".tsr-voice"), soundBtn = $(".tsr-sound");
+    const snd = () => !hooks.mute && Sound.enabled() && !!Sound.ready();
     const hookItem = D.find((x) => x.hook), cliffItem = D.find((x) => x.cliff);
     const stops = D.filter((x) => x.k === "dialogue" || x.k === "action" || x.k === "cut").map((x) => x.t);
     let t = 0, on = false, last = 0, rate = 1, raf = 0, started = false;
-    let curShot, curPic, curLine, curWords = -1, curIdx = -1;
+    let curShot, curPic, curLine, curWords = -1, curIdx = -1, lastDrone = 0;
+    // sound cues on the promo's own timeline: whooshes on new shots, a hit on the hook and on joins, the script's
+    // sound effects, and a heartbeat then a riser into the cut to black (the braam itself plays in end())
+    const cues = [];
+    D.forEach((x) => {
+      if (x.k === "camera" && x.t > 0.3) cues.push({ t: x.t, fn: () => Sound.whoosh(false) });
+      if (x.k === "cut") cues.push({ t: x.t, fn: () => { Sound.whoosh(true); Sound.hit(); } });
+      if (x.k === "sfx") cues.push({ t: x.t, fn: () => Sound.sfx(x.text) });
+    });
+    if (hookItem) cues.push({ t: hookItem.t, fn: () => Sound.hit() });
+    for (let b = Math.max(1, dur - 8); b < dur - 2.4; b += 0.8) cues.push({ t: b, fn: () => Sound.heartbeat() });
+    cues.push({ t: Math.max(0.2, dur - 2.2), fn: () => Sound.riser(Math.min(2.2, dur) / rate) });
+    cues.sort((a, b) => a.t - b.t);
+    const fire = (a, b) => { for (const c of cues) if (c.t > a && c.t <= b) c.fn(); };
 
     const nextStart = (x) => { for (let j = D.indexOf(x) + 1; j < D.length; j++) if (D[j].k === "dialogue" || D[j].k === "cut") return D[j].t; return dur; };
 
@@ -182,11 +312,14 @@
       timeEl.textContent = mm(t);
       scrub.setAttribute("aria-valuenow", t.toFixed(1));
       if (idx !== curIdx) { curIdx = idx; hooks.onLine && hooks.onLine(idx, on); }
+      if (on && !hooks.mute && Sound.drone && performance.now() - lastDrone > 120) { lastDrone = performance.now(); Sound.updateDrone(t / dur, !!line); }
     }
 
     function frame(now) {
       if (!on) return;
-      t += ((now - last) / 1000) * rate; last = now;
+      const t0 = t;
+      t = Math.max(0, t + (Math.max(0, now - last) / 1000) * rate); last = now;   // a frame can start just before play()
+      if (snd()) fire(t0, Math.min(t, dur));
       if (t >= dur) { t = dur; draw(); end(); return; }
       draw();
       raf = requestAnimationFrame(frame);
@@ -200,14 +333,15 @@
       curLine = undefined; kenBurns(true);
       last = performance.now();
       hooks.onPlay && hooks.onPlay();
+      if (snd()) { Sound.startDrone(); if (t < 0.05) fire(-1, 0.05); }
       raf = requestAnimationFrame(frame);
     }
     function pause() {
       on = false; cancelAnimationFrame(raf);
       phone.classList.remove("playing"); playBtn.classList.remove("on"); playBtn.setAttribute("aria-label", "Play");
-      kenBurns(false); Voices.stop();
+      kenBurns(false); Voices.stop(); if (!hooks.mute) Sound.stopDrone(false);
     }
-    function end() { pause(); phone.classList.add("ended"); hooks.onEnd && hooks.onEnd(); }
+    function end() { const s = snd(); pause(); if (s) Sound.braam(); phone.classList.add("ended"); hooks.onEnd && hooks.onEnd(); }
     function seek(nt, keepPlaying = true) {
       t = Math.max(0, Math.min(dur - 0.01, nt));
       phone.classList.remove("ended");
@@ -236,10 +370,19 @@
     const paintVoice = () => {
       voiceBtn.hidden = !Voices.ready;
       voiceBtn.setAttribute("aria-pressed", String(Voices.enabled()));
-      voiceBtn.textContent = Voices.enabled() ? "Voices on" : "Voices off";
+      voiceBtn.title = Voices.enabled() ? "Voices on: lines read aloud by your device's own voices" : "Voices off (click to read the lines aloud)";
     };
     voiceBtn.addEventListener("click", () => { Voices.set(!Voices.enabled()); paintVoice(); });
     Voices.subs.add(paintVoice); paintVoice();
+    const paintSound = () => {
+      soundBtn.setAttribute("aria-pressed", String(Sound.enabled()));
+      soundBtn.title = Sound.enabled() ? "Sound on: a trailer-style score and effects, made in your browser" : "Sound off";
+    };
+    soundBtn.addEventListener("click", () => {
+      Sound.set(!Sound.enabled());
+      if (Sound.enabled() && on && !hooks.mute) Sound.startDrone();
+    });
+    Sound.subs.add(paintSound); paintSound();
     // scrubbing: drag anywhere on the bar
     const at = (e) => { const r = scrub.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * dur; };
     let dragging = false, wasOn = false;
@@ -256,7 +399,7 @@
     return {
       play, pause, toggle, seek, step,
       get playing() { return on; },
-      destroy() { pause(); Voices.subs.delete(paintVoice); },
+      destroy() { pause(); Voices.subs.delete(paintVoice); Sound.subs.delete(paintSound); },
     };
   }
 
@@ -288,8 +431,8 @@
     P.forEach((p) => { if (p.policy.status in pol) pol[p.policy.status]++; });
 
     const downloads = (opts.downloads || []).length
-      ? `<div class="tsr-downloads"><span>Download</span>${opts.downloads.map((d) =>
-          `<a class="tsr-btn" href="${esc(d.href)}" download="${esc(d.name || "")}">${esc(d.label)}</a>`).join("")}</div>` : "";
+      ? `<details class="tsr-dl"><summary class="tsr-btn">Download<span class="chev" aria-hidden="true"></span></summary><div class="tsr-menu">${opts.downloads.map((d) =>
+          `<a href="${esc(d.href)}" download="${esc(d.name || "")}"><b>${esc(d.label)}</b>${d.desc ? `<small>${esc(d.desc)}</small>` : ""}</a>`).join("")}</div></details>` : "";
     const lede = P.length
       ? `Thumbstop read all ${view.episodes} episodes and found <b>${P.length} promos</b>, best first.` +
         (firsts.length ? ` <b>Post these ${firsts.length} first</b>, then work down the list.` : "") +
@@ -299,18 +442,20 @@
     root.innerHTML = `
 <section class="tsr">
   <header class="tsr-head">
-    ${opts.standalone ? `<div class="tsr-brand"><span class="tsr-mark"></span><b>Thumbstop</b><span>· promo review</span></div>` : `<div class="tsr-eyebrow">Results</div>`}
-    <h1>${esc(view.show)}</h1>
+    <div class="tsr-head-top">
+      <div>${opts.standalone ? `<div class="tsr-brand"><span class="tsr-mark"></span><b>Thumbstop</b><span>· promo review</span></div>` : `<div class="tsr-eyebrow">Results</div>`}
+        <h1>${esc(view.show)}</h1></div>
+      ${downloads}
+    </div>
     <p class="tsr-lede">${lede}</p>
-    ${P.length ? `<div class="tsr-stats">
-      <span class="tsr-stat"><b>${P.length}</b> promos</span>
-      <span class="tsr-stat"><b>${firsts.length}</b> to post first</span>
-      <span class="tsr-stat"><b>${passed}/${P.length}</b> a stranger followed</span>
-      <span class="tsr-stat"><b>${flagged}</b> with a warning</span>
-      <span class="tsr-stat">As an ad <span class="ok">${pol.CLEAR} clear</span> <span class="warn">${pol.CHECK} check</span> <span class="bad">${pol.HOLD} hold</span></span>
-    </div>` : ""}
-    ${downloads}
-    ${P.length ? `<p class="tsr-note">Timecodes are at ${view.fps} fps from the script timestamps, so confirm them on picture.</p>` : ""}
+    ${P.length ? `<dl class="tsr-kpis">
+      <div><dt>Promos</dt><dd>${P.length}</dd></div>
+      <div><dt>Post first</dt><dd>${firsts.length}</dd></div>
+      <div><dt>A stranger followed</dt><dd>${passed}<span>/${P.length}</span></dd></div>
+      <div><dt>With a warning</dt><dd>${flagged}</dd></div>
+      <div><dt>As an ad</dt><dd class="pol"><span class="ok" title="clear">${pol.CLEAR}</span><span class="warn" title="check">${pol.CHECK}</span><span class="bad" title="hold">${pol.HOLD}</span></dd><small>clear · check · hold</small></div>
+    </dl>
+    <p class="tsr-note">Timecodes are at ${view.fps} fps from the script timestamps, so confirm them on picture.</p>` : ""}
   </header>
   ${firsts.length ? `<section class="tsr-first">
     <div class="tsr-sec"><div><div class="tsr-eyebrow">Start here</div><h2>Post these first</h2></div>
@@ -328,7 +473,7 @@
         <span><span class="tsr-kbd">J</span><span class="tsr-kbd">K</span> promo</span><span><span class="tsr-kbd">A</span><span class="tsr-kbd">N</span><span class="tsr-kbd">R</span> decide</span></div></div>
     <div class="tsr-deskbar">
       <div class="tsr-filters" role="group" aria-label="Show"></div>
-      <div class="tsr-progress"><span><b data-done>0</b>/${P.length} reviewed</span><span class="tsr-meter"><i></i></span><span>Time <b data-timer>0:00</b></span></div>
+      <div class="tsr-progress"><span data-prog><b data-done>0</b>/${P.length} reviewed</span><span class="tsr-meter"><i></i></span><span>Time <b data-timer>0:00</b></span><span class="tsr-sum" data-sum></span></div>
       <span class="tsr-grow"></span>
       <button class="tsr-btn" type="button" data-export>Export decisions (CSV)</button>
       <button class="tsr-btn ghost" type="button" data-reset>Reset</button>
@@ -369,8 +514,13 @@
         st.textContent = d ? MARK[d.v] : "";
       });
       const done = Object.keys(S.d).filter((k) => byId[k]).length;
-      $("[data-done]").textContent = done;
+      const n = { accept: 0, nudge: 0, reject: 0 };
+      Object.entries(S.d).forEach(([k, d]) => { if (byId[k]) n[d.v]++; });
+      $("[data-prog]").innerHTML = done === P.length ? `<b>All ${P.length}</b> reviewed` : `<b data-done>${done}</b>/${P.length} reviewed`;
+      $("[data-sum]").innerHTML = done ? `<i class="ok">${n.accept} accepted</i><i class="warn">${n.nudge} nudged</i><i class="bad">${n.reject} rejected</i>` : "";
       $(".tsr-meter i").style.width = (100 * done) / P.length + "%";
+      $("[data-export]").classList.toggle("primary", done === P.length);
+      desk.classList.toggle("complete", done === P.length);
     }
 
     function tick() { const e = $("[data-timer]"); if (e) e.textContent = S.t0 ? mm((Date.now() - S.t0) / 1000) : "0:00"; }
@@ -517,6 +667,8 @@
 
     // ---------------------------------------------------------------- events
     root.addEventListener("click", (e) => {
+      const dl = root.querySelector(".tsr-dl[open]");
+      if (dl && (!dl.contains(e.target) || e.target.closest(".tsr-menu a"))) dl.open = false;
       const b = e.target.closest("button");
       if (!b || !root.contains(b)) return;
       if (b.dataset.pick) return select(b.dataset.pick, { autoplay: true, scroll: true });
@@ -598,5 +750,5 @@
     return pl;
   }
 
-  window.ThumbstopReview = { mount, teaser, Voices };
+  window.ThumbstopReview = { mount, teaser, Voices, Sound };
 })();

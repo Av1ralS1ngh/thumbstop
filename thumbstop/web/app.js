@@ -13,7 +13,14 @@
   const steps = [...document.querySelectorAll("#steps li")], runbar = $("#runbar"), runbarText = $("#runbar-text");
   const results = $("#results"), jump = $("#jump");
   const STAGE_TEXT = ["Reading the scripts", "Marking hooks and cliffhangers", "Cutting every pairing", "Checking with a cold viewer", "Ranking", "Done"];
-  const FILE_LABEL = { "promos.csv": "Promos (CSV)", "promos.json": "Promos (JSON)", "selects.edl": "EDL for Premiere", "review.html": "Review page" };
+  const FILES = {
+    "promos.csv": ["Promos (CSV)", "Every segment with timecodes, the hook, the cliffhanger and why it works"],
+    "promos.json": ["Promos (JSON)", "Everything, plus the cold viewer's notes and the cut sheets"],
+    "selects.edl": ["EDL for Premiere or Resolve", "All picks back to back, ready to import"],
+    "review.html": ["Review page", "This review desk as one file, to share or use offline"],
+  };
+  const SHORT = { recorded: "Claude Opus 4.6 + GPT-OSS, replayed", offline: "No AI, simple keyword rules",
+    bedrock: "Live, with your AWS keys", custom: "Live, any OpenAI-compatible API" };
   let info = { modes: [], default: "offline", recorded_covers_pack: false, demo: { episodes: 3 } };
   let upload = null, uploading = false, busy = false, review = null;
 
@@ -28,6 +35,7 @@
 
   function sync() {
     const m = mode(), src = source(), rec = m === "recorded";
+    if (m === "bedrock" || m === "custom") $("#more").open = true;
     drop.hidden = src !== "upload";
     $("#keys-bedrock").hidden = m !== "bedrock";
     $("#keys-custom").hidden = m !== "custom";
@@ -37,14 +45,14 @@
     $("#run-badge").textContent = rec || m === "offline" ? "No key needed" : "Uses your key";
     let note = "";
     if (src === "demo") {
-      note = rec ? "Replays a real Claude Opus + GPT-OSS run on a short original show, in about a second."
-        : m === "offline" ? "Simple keyword rules, so you can see the pipeline with no AI at all."
+      note = rec ? "Replays a real Claude + GPT-OSS run in about a second."
+        : m === "offline" ? "Keyword rules only, so you can see the pipeline with no AI."
           : "Runs the models live on the demo show with your key.";
-      if (rec && info.recorded_covers_pack) note += " Have the assignment's input pack? Choose Your scripts and upload its zip to replay the real 50-episode run.";
+      if (rec && info.recorded_covers_pack) note += " Have the input pack? Choose Your scripts to replay the real 50-episode run.";
     } else if (rec) {
       note = info.recorded_covers_pack
-        ? "The recorded run covers the assignment's input pack: upload its zip as it was sent. Other scripts need a live model or Offline rules."
-        : "The recorded run only covers the demo show. Pick a live model or Offline rules for your own scripts.";
+        ? "The recorded run covers the assignment's input pack, uploaded as it was sent. Other scripts need Offline rules or your own model."
+        : "The recorded run only covers the demo show. Use Offline rules or your own model for other scripts.";
     } else note = m === "offline" ? "Rules only, no AI: quick, but the picks are rough." : "Every model call runs live with your key.";
     noteEl.textContent = note;
     go.disabled = busy;
@@ -52,8 +60,10 @@
 
   async function loadInfo() {
     try { info = await (await fetch("/api/info", { cache: "no-store" })).json(); } catch (e) { /* keep defaults */ }
-    modesEl.innerHTML = info.modes.map((m) => `<label class="mode"><input type="radio" name="mode" value="${esc(m.id)}"${m.id === info.default ? " checked" : ""}>` +
-      `<span><b>${esc(m.label)}</b><small>${esc(m.desc)}</small></span></label>`).join("");
+    const card = (m) => `<label class="mode"><input type="radio" name="mode" value="${esc(m.id)}"${m.id === info.default ? " checked" : ""}>` +
+      `<span><b>${esc(m.label)}</b><small>${esc(SHORT[m.id] || m.desc)}</small></span></label>`;
+    modesEl.innerHTML = info.modes.filter((m) => m.id === "recorded" || m.id === "offline").map(card).join("");
+    $("#modes-more").innerHTML = info.modes.filter((m) => m.id !== "recorded" && m.id !== "offline").map(card).join("");
     $("#demo-sub").textContent = `${info.demo.episodes} short episodes, original fiction`;
     sync();
   }
@@ -83,6 +93,7 @@
     try {
       upload = await xhrUpload(f, (p) => { const b = dropFile.querySelector(".bar i"); if (b) b.style.width = (p * 100).toFixed(0) + "%"; });
       dropFile.innerHTML = `<span class="ok">✓</span><b>${esc(upload.name)}</b><small>${upload.episodes} episode files · ${size(upload.size)}</small>`;
+      go.focus({ preventScroll: true });   // ready: Enter runs it
     } catch (e) {
       dropIn.hidden = false; dropFile.hidden = true;
       showErr(e.message);
@@ -190,8 +201,9 @@
     if (d.mode === "offline") notes.push("Offline mode uses keyword rules and no AI, so these picks are rough. The recorded AI run shows what the real thing finds.");
     results.innerHTML = notes.map((t) => `<p class="notice">${esc(t)}</p>`).join("") + `<div id="review-root"></div>`;
     results.hidden = false;
+    $("#nav-results").hidden = false;
     review = window.ThumbstopReview.mount($("#review-root"), res.view, {
-      downloads: res.files.map((name) => ({ label: FILE_LABEL[name] || name, href: `/api/jobs/${jid}/files/${name}`, name })),
+      downloads: res.files.map((name) => ({ label: (FILES[name] || [name])[0], desc: (FILES[name] || [])[1], href: `/api/jobs/${jid}/files/${name}`, name })),
     });
     // the results appear right under the steps; point the way only when they start below the screen
     requestAnimationFrame(() => { jump.hidden = results.getBoundingClientRect().top < window.innerHeight - 24; });
@@ -212,6 +224,20 @@
 
   fetch("/assets/teaser.json", { cache: "no-store" }).then((r) => r.json())
     .then((d) => window.ThumbstopReview.teaser($("#teaser"), d.promo)).catch(() => { $(".teaser").hidden = true; });
+
+  // the top bar: a hairline once the page scrolls, and the section you're in
+  const topbar = $("#topbar"), navLinks = [...document.querySelectorAll("[data-nav]")];
+  const onScroll = () => topbar.classList.toggle("scrolled", window.scrollY > 8);
+  window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  if ("IntersectionObserver" in window) {
+    const seen = new Map();
+    const spy = new IntersectionObserver((es) => {
+      es.forEach((x) => seen.set(x.target.id, x.isIntersecting ? x.intersectionRatio : 0));
+      const best = [...seen.entries()].sort((a, b) => b[1] - a[1])[0];
+      navLinks.forEach((l) => l.classList.toggle("on", !!best && best[1] > 0 && l.dataset.nav === best[0]));
+    }, { threshold: [0, 0.15, 0.4, 0.7], rootMargin: "-80px 0px -35% 0px" });
+    ["run", "how", "results"].forEach((id) => spy.observe(document.getElementById(id)));
+  }
 
   loadInfo().then(() => {
     if (new URLSearchParams(location.search).get("demo") === "1") runIt({ scroll: false });

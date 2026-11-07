@@ -1,15 +1,19 @@
 /* Thumbstop hosted app shell: hero + run panel, the five steps (which double as live progress), results. */
-.app { min-height: 100vh; }
+.app { min-height: 100vh; --tsr-top: 80px; }
 .app main, .app .nav, .app .foot { max-width: 1320px; margin: 0 auto; padding-left: 28px; padding-right: 28px; }
 .app a { color: inherit; }
 .app ::selection { background: rgba(217, 180, 106, .35); }
 
-.nav { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+.topbar { position: sticky; top: 0; z-index: 30; background: rgba(11, 10, 8, .6); backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%); border-bottom: 1px solid transparent; transition: border-color .25s, background .25s; }
+.topbar.scrolled { border-bottom-color: var(--line); background: rgba(11, 10, 8, .82); }
+.nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
 .nav .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-size: 15px; }
 .nav .logo b { font-weight: 600; letter-spacing: -.01em; }
 .nav nav { display: flex; gap: 6px; }
 .nav nav a { padding: 8px 12px; border-radius: 999px; color: var(--ink3); text-decoration: none; font-size: 14px; transition: color .15s, background .15s; }
-.nav nav a:hover { color: var(--ink); background: var(--panel); }
+.nav nav a:hover, .nav nav a.on { color: var(--ink); background: var(--panel); }
+.nav nav a.on { box-shadow: inset 0 0 0 1px var(--line); }
 
 /* hero */
 .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr); gap: 56px; align-items: start; padding: 40px 0 64px; }
@@ -69,6 +73,13 @@
 .field { display: grid; gap: 8px; }
 .field-l { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
 .modes { display: grid; gap: 6px; }
+.modes.two { grid-template-columns: 1fr 1fr; }
+.more summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; margin-top: 2px; color: var(--ink3); font-size: 13px; }
+.more summary::-webkit-details-marker { display: none; }
+.more summary::before { content: "+"; font: 500 14px/1 var(--mono); color: var(--ink4); }
+.more[open] summary::before { content: "−"; }
+.more summary:hover { color: var(--ink); }
+.more .modes { margin-top: 8px; }
 .mode span { display: grid; grid-template-columns: 16px 1fr; gap: 2px 10px; align-items: center; padding: 10px 12px; border-radius: 12px;
   border: 1px solid var(--line); background: transparent; transition: border-color .15s, background .15s; }
 .mode span::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--ink4); grid-row: span 2; box-sizing: border-box; }
@@ -106,7 +117,8 @@
 .run-err button { margin-top: 8px; }
 
 /* steps: idle they explain, running they light up, done they show the funnel */
-.how { padding: 56px 0 24px; border-top: 1px solid var(--line); scroll-margin-top: 20px; }
+section.how { padding: 56px 0 24px; border-top: 1px solid var(--line); scroll-margin-top: 72px; }
+.run { scroll-margin-top: 84px; align-self: center; }
 .how-h { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 26px; }
 .how-h h2 { margin: 8px 0 0; font: 600 clamp(24px, 2.6vw, 32px)/1.15 var(--sans); letter-spacing: -.025em; max-width: 620px; text-wrap: balance; }
 .how-h p { margin: 0; max-width: 420px; color: var(--ink3); font-size: 14.5px; }
@@ -133,7 +145,7 @@
 .runbar b { color: var(--ink); font-weight: 500; }
 
 /* results */
-.results { padding: 56px 0 40px; scroll-margin-top: 8px; }
+.results { padding: 56px 0 40px; scroll-margin-top: 64px; }
 .skel { min-height: 90vh; display: grid; align-content: start; gap: 14px; }
 .skel i { display: block; border-radius: 12px; background: linear-gradient(90deg, var(--panel) 0%, var(--panel2) 40%, var(--panel) 80%);
   background-size: 300% 100%; animation: shimmer 1.4s linear infinite; }
@@ -166,7 +178,7 @@
 }
 @media (max-width: 640px) {
   .app main, .app .nav, .app .foot { padding-left: 16px; padding-right: 16px; }
-  .nav nav a:first-child { display: none; }
+  .nav nav a[data-nav] { display: none; }
   .hero h1 { font-size: 40px; }
   .hero .lede { font-size: 16px; }
   .hero-show { grid-template-columns: 150px minmax(0, 1fr); gap: 18px; margin-top: 26px; padding-left: 7px; }
@@ -176,6 +188,7 @@
   .facts { gap: 10px; } .facts b { font-size: 18px; } .facts li { font-size: 12.5px; padding-top: 8px; }
   .run { padding: 16px; border-radius: 22px; }
   .adv-grid { grid-template-columns: 1fr 1fr; }
+  .modes.two { grid-template-columns: 1fr; }
   .steps { grid-template-columns: 1fr; }
   .results { padding-top: 40px; }
 }
