@@ -1,0 +1,24 @@
+# --- Confidential: never commit Kuku data or anything derived from it ---
+*.zip
+input_pack/
+data/
+outputs/
+runs/
+labels/
+.cache/
+trace*.jsonl
+*.edl
+*.xml
+!tests/fixtures/**
+# secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+# python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.DS_Store

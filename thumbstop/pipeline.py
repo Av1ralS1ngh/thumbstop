@@ -1,0 +1,122 @@
+"""The orchestrator. Code fixes the order of stages and owns every limit; models are called only at
+annotate, gate and repair. Re-runs are free: every model call is cached by content."""
+from __future__ import annotations
+
+import json
+import time
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from .annotate import EpisodeAnnotation, annotate_show
+from .export import write_all
+from .gate import gate_all, repair_one
+from .llm import BudgetExceeded, LLMError, Router
+from .parse import ingest_report, parse_show
+from .rank import final_score, policy_status, post_first, select, spoiler_note
+from .search import MAX_LEN, MIN_LEN, Promo, anchored_candidates, assign_ids, best_per_moment, validate
+
+
+@dataclass
+class Options:
+    top: int = 20
+    gate_n: int = 40              # how many shortlisted promos the cold viewer checks
+    repair: bool = True
+    gate: bool = True
+    episodes: tuple[int, int] | None = None
+    min_len: float = MIN_LEN
+    max_len: float = MAX_LEN
+    exclude_policy: list[str] = field(default_factory=list)   # e.g. ["violence"] for a "no violence" what-if
+    hook_types: list[str] = field(default_factory=list)
+    early_ep: int = 15
+
+
+def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) -> dict:
+    t_start = time.time()
+    out.mkdir(parents=True, exist_ok=True)
+    show = parse_show(folder)
+    if opt.episodes:
+        a, b = opt.episodes
+        show.episodes = [e for e in show.episodes if a <= e.num <= b]
+        if not show.episodes:
+            raise SystemExit(f"no episodes in range {a}-{b}")
+    rep = ingest_report(show)
+    log(rep)
+    log(f"Models: {router.describe()}")
+    funnel: dict[str, int] = {}
+
+    # 1. annotate (AI): sparse ranked hook / cliffhanger beats per episode
+    log("[1/5] annotating episodes ...")
+    anns: dict[int, EpisodeAnnotation] = annotate_show(show, router["annotate"], log=log)
+    (out / "annotations.json").write_text(json.dumps({k: v.model_dump() for k, v in anns.items()}, indent=1))
+    funnel["anchors"] = sum(len(a.cliffhangers) for a in anns.values())
+    funnel["hook_beats"] = sum(len(a.hooks) for a in anns.values())
+
+    # 2. search (code): writer's ending fixed, standalone hook-first opening searched
+    log("[2/5] anchored search ...")
+    cands = anchored_candidates(show, anns, opt.min_len, opt.max_len)
+    funnel["raw_candidates"] = len(cands)
+    pool = best_per_moment(cands)
+    assign_ids(pool)
+    for p in pool:
+        p.policy = policy_status(show, p)
+        p.spoiler = spoiler_note(show, p)
+    if opt.exclude_policy:
+        pool = [p for p in pool if not any(e["rule"] in opt.exclude_policy for e in p.policy.get("evidence", []))
+                and p.policy.get("status") != "HOLD"]
+    if opt.hook_types:
+        pool = [p for p in pool if p.hook_type in opt.hook_types]
+    bad = [(p.id, validate(show, p, opt.min_len, opt.max_len)) for p in pool]
+    bad = [b for b in bad if b[1]]
+    funnel["valid_candidates"] = len(pool) - len(bad)
+    if bad:
+        log(f"  {len(bad)} candidates failed validation and were dropped: {bad[:3]}")
+        drop = {b[0] for b in bad}
+        pool = [p for p in pool if p.id not in drop]
+
+    # 3. cold-viewer gate (AI, different family) on a diverse shortlist
+    short, _ = select(pool, top=opt.gate_n, per_episode=3)
+    funnel["shortlisted"] = len(short)
+    if opt.gate and short:
+        log(f"[3/5] cold-viewer check on {len(short)} promos ({router['gate'].p.model}) ...")
+        gate_all(show, anns, short, router["gate"], log=log)
+        funnel["gate_passed"] = sum(1 for p in short if (p.gate or {}).get("passed"))
+
+    # 4. setup-repair agent loop for promos the cold viewer could not follow
+    repaired: list[Promo] = []
+    if opt.gate and opt.repair:
+        fails = [p for p in short if (p.gate or {}).get("passed") is False and (p.gate or {}).get("unexplained")]
+        log(f"[4/5] setup-repair on {len(fails)} promos the cold viewer could not follow ...")
+        def _rep(p):
+            try:
+                return repair_one(show, anns, p, router["repair"], router["gate"])
+            except (LLMError, BudgetExceeded) as e:
+                p.repair = {"attempted": True, "error": str(e)[:200]}
+                return None
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            for r in ex.map(_rep, fails):
+                if r is not None:
+                    r.policy = policy_status(show, r)
+                    r.spoiler = spoiler_note(show, r)
+                    repaired.append(r)
+        funnel["repair_attempted"] = len(fails)
+        funnel["repair_fixed"] = sum(1 for r in repaired if (r.repair or {}).get("result") == "fixed")
+
+    # 5. rank (code) + post-first picks
+    log("[5/5] ranking ...")
+    final_pool = short + [r for r in repaired if (r.gate or {}).get("passed")]
+    ranked, variants = select(final_pool + [p for p in pool if p not in short], top=opt.top, per_episode=2)
+    picks = post_first(ranked, early_ep=opt.early_ep)
+    funnel["ranked"] = len(ranked)
+    u = router.budget.usage
+    meta = {"models": router.describe(), "usage": u.__dict__,
+            "by_role": {k: v.__dict__ for k, v in router.budget.by_role.items()},
+            "seconds": round(time.time() - t_start, 1), "funnel": funnel,
+            "options": {k: v for k, v in opt.__dict__.items()}, "ingest": rep}
+    write_all(show, out, ranked, variants, picks, meta,
+              extra={"repairs": [{"id": r.id, "from": (r.repair or {}).get("from"), "result": (r.repair or {}).get("result"),
+                                  "log": (r.repair or {}).get("log")} for r in repaired]})
+    (out / "candidates.json").write_text(json.dumps(
+        [dict(p.to_dict(), final_score=final_score(p)) for p in pool + repaired], indent=1, default=str))
+    log(f"Done in {meta['seconds']}s | calls {u.calls} (+{u.cache_hits} cached) | est. ${u.usd:.2f} | funnel {funnel}")
+    return {"show": show, "anns": anns, "pool": pool, "short": short, "ranked": ranked, "picks": picks, "meta": meta}

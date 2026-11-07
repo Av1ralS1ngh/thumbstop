@@ -1,0 +1,67 @@
+# Model profiles. Swap a model = change one line under `roles`, or run with --profile NAME
+# (one-profile mode: every role uses that model). Prices are list USD per 1M tokens, for cost reports only.
+
+profiles:
+  # --- Claude in Amazon Bedrock (Anthropic SDK, Mantle endpoint). Auth: AWS_BEARER_TOKEN_BEDROCK or AWS creds.
+  opus47:
+    provider: anthropic_bedrock
+    model: anthropic.claude-opus-4-7
+    effort: medium
+    thinking: none
+    price_in: 5.0
+    price_out: 25.0
+    max_concurrency: 6
+
+  # --- Open-weight models on Bedrock via its OpenAI-compatible endpoint (same AWS key) - a different model family for the judge
+  bedrock_gptoss:
+    provider: openai_compat
+    base_url: "https://bedrock-mantle.${AWS_REGION}.api.aws/v1"
+    api_key_env: AWS_BEARER_TOKEN_BEDROCK
+    model: openai.gpt-oss-120b
+    json_mode: json_object
+    extra: {reasoning_effort: low}
+    price_in: 0.15
+    price_out: 0.60
+    max_concurrency: 6
+
+  # --- Free tiers (optional)
+  gemini_lite:
+    provider: openai_compat
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+    api_key_env: GEMINI_API_KEY
+    model: gemini-3.5-flash-lite
+    json_mode: json_object
+    price_in: 0.30
+    price_out: 2.50
+    max_concurrency: 2
+  groq_gptoss:
+    provider: openai_compat
+    base_url: https://api.groq.com/openai/v1
+    api_key_env: GROQ_API_KEY
+    model: openai/gpt-oss-120b
+    json_mode: json_object
+    extra: {reasoning_effort: low}
+    max_concurrency: 1
+
+  # --- Any OpenAI-compatible endpoint (e.g. one Kuku provides): set LLM_BASE_URL / LLM_MODEL / LLM_API_KEY
+  custom:
+    provider: openai_compat
+    base_url: "${LLM_BASE_URL}"
+    api_key_env: LLM_API_KEY
+    model: "${LLM_MODEL}"
+    json_mode: json_object
+
+  # --- No network: deterministic rules (offline fallback and the 'rules-only' baseline)
+  rules:
+    provider: rules
+    model: rules
+
+roles:
+  annotate: opus47        # finds hook & cliffhanger beats per episode
+  gate: bedrock_gptoss    # cold-viewer check (different family from annotate)
+  repair: opus47          # picks one setup segment when the cold viewer is lost
+  propose: opus47         # field-standard baseline: model proposes whole promos
+
+budget:
+  max_calls: 600
+  max_usd: 15.0
