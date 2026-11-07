@@ -33,7 +33,7 @@ class Beat:
     t1: float
     kind: Kind
     text: str
-    speaker: str | None = None      # raw label without parentheticals, e.g. "LADY ELEANOR (Furious)"
+    speaker: str | None = None      # raw label without parentheticals, e.g. "LADY ELEANOR"
     tags: list[str] = field(default_factory=list)   # emotion tags, inline [chuckles]
     flags: list[str] = field(default_factory=list)  # OS, VO
     scene: int = 0
