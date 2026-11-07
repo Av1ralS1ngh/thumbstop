@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .annotate import EpisodeAnnotation, annotate_show
 from .export import write_all
-from .gate import gate_all, repair_one
+from .gate import drift_flag, gate_all, repair_one
 from .llm import BudgetExceeded, LLMError, Router
 from .parse import ingest_report, parse_show
 from .rank import final_score, policy_status, post_first, select, spoiler_note
@@ -116,7 +116,28 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
     # 5. rank (code) + post-first picks
     log("[5/5] ranking ...")
     final_pool = short + [r for r in repaired if (r.gate or {}).get("passed")]
-    ranked, variants = select(final_pool + [p for p in pool if p not in short], top=opt.top, per_episode=2)
+    for p in final_pool:   # editor warning only; ranking ignores it
+        f = drift_flag(p.gate)
+        if f and f not in p.flags:
+            p.flags.append(f)
+    funnel["question_drift"] = sum(1 for p in final_pool if drift_flag(p.gate))
+    rank_pool = final_pool + [p for p in pool if p not in short]
+    ranked, variants = select(rank_pool, top=opt.top, per_episode=2)
+    late = 0
+    for _ in range(2 if opt.gate else 0):   # every promo the editor sees gets a cold-viewer verdict
+        unchecked = [p for p in ranked if not p.gate]
+        if not unchecked:
+            break
+        log(f"  cold-viewer check on {len(unchecked)} promos that moved into the top {opt.top} ...")
+        gate_all(show, anns, unchecked, router["gate"], log=log)
+        late += len(unchecked)
+        for p in unchecked:
+            f = drift_flag(p.gate)
+            if f and f not in p.flags:
+                p.flags.append(f)
+        ranked, variants = select(rank_pool, top=opt.top, per_episode=2)
+    if late:
+        funnel["late_checked"] = late
     picks = post_first(ranked, early_ep=opt.early_ep)
     funnel["ranked"] = len(ranked)
     u = router.budget.usage

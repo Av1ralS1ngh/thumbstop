@@ -98,6 +98,40 @@ def clip_text(show: Show, anns: dict[int, EpisodeAnnotation], p: Promo, anonymiz
     return text
 
 
+INTENT_VERSION = "intent-v1"
+DRIFT_BELOW = 2   # on the blind-test controls this flagged 17/24 clips with a cut-off ending and 8/25 real clips
+
+
+class IntentMatch(BaseModel):
+    reason: str = Field(description="One short sentence")
+    match: int = Field(description="3 same central question; 2 same situation, different emphasis; "
+                                   "1 related but a different question; 0 unrelated")
+
+
+INTENT_SYSTEM = ("You compare two questions about the same short drama clip. Question A is what the writer intends a "
+                 "viewer to be wondering when the clip ends. Question B is what a first-time viewer actually wondered "
+                 "after watching it. Unnamed characters may be written as WOMAN 1, MAN 2 and so on, and may be the same "
+                 "people as named ones in A. Rate how closely B is the same open question as A. Return JSON only.")
+
+
+def intent_match(llm: LLM, intended: str, stranger: str, tag: str = "") -> dict | None:
+    """Does a stranger leave with the question the writer meant? The cold viewer cannot tell when a cliffhanger
+    was cut off, but its question drifts when that happens, so this is an editor warning (never a filter)."""
+    if llm.p.provider == "rules" or not (intended or "").strip() or not (stranger or "").strip():
+        return None
+    m = llm.json(INTENT_SYSTEM, f"A: {intended}\nB: {stranger}", IntentMatch, max_tokens=600,
+                 prompt_version=INTENT_VERSION, tag=tag + ":intent")
+    return {"intent_match": max(0, min(3, m.match)), "intent_note": m.reason}
+
+
+def drift_flag(gate: dict | None) -> str | None:
+    m = (gate or {}).get("intent_match")
+    if m is not None and m < DRIFT_BELOW:
+        return (f"QUESTION_DRIFT: a stranger leaves asking something other than the intended question ({m}/3), "
+                "so check the ending lands and the setup is clear")
+    return None
+
+
 def gate_one(show: Show, anns: dict[int, EpisodeAnnotation], p: Promo, llm: LLM) -> dict:
     if llm.p.provider == "rules":
         ok = p.needs_context <= 1
@@ -113,6 +147,10 @@ def gate_one(show: Show, anns: dict[int, EpisodeAnnotation], p: Promo, llm: LLM)
     d["passed"] = bool(d["hook_score"] >= 2 and d["cliff_score"] >= 2 and d["standalone_score"] >= 2
                        and not v.gives_away_payoff and v.open_question.strip())
     d["judge"] = llm.p.model
+    try:
+        d.update(intent_match(llm, p.open_question, d.get("open_question", ""), tag=p.id) or {})
+    except LLMError:
+        pass   # a missing warning is fine; never fail the gate over it
     return d
 
 

@@ -298,7 +298,7 @@ def sidebar() -> tuple[str, dict[str, str | None], Options] | None:
         top = st.number_input("Top N promos", min_value=1, max_value=50, value=20, key="top")
         lo, hi = st.slider("Promo length (s)", min_value=10, max_value=90, value=(20, 60), key="length")
         ep_text = st.text_input("Episodes", placeholder="all, or e.g. 1-10", key="episodes")
-        fast = st.checkbox("Fast mode", key="fast", help="Cold viewer checks the top 12 only; no setup repair.")
+        fast = st.checkbox("Fast mode", key="fast", help="No setup repair and no proposals; every shown promo is still cold-checked.")
     try:
         episodes = parse_range(ep_text)
     except ValueError as e:
@@ -307,8 +307,8 @@ def sidebar() -> tuple[str, dict[str, str | None], Options] | None:
     if mode == CUSTOM and not (env["LLM_BASE_URL"] and env["LLM_MODEL"]):
         sb.warning("Enter the base URL and model to use this option.")
         return None
-    opt = Options(top=int(top), gate_n=12 if fast else 40, repair=not fast, episodes=episodes,
-                  min_len=float(lo), max_len=float(hi))
+    opt = Options(top=int(top), gate_n=max(12, int(top) + 4) if fast else max(40, int(top) + 4), repair=not fast, episodes=episodes,
+                  min_len=float(lo), max_len=float(hi), seeds=not fast)
     return mode, env, opt
 
 
@@ -356,6 +356,8 @@ def show_results(res: dict) -> None:
     for r in recs:
         with st.expander(f"#{r['rank']} {r['id']} | {r['duration_s']:.0f}s | {seg_label(r)}"):
             st.markdown(f"**Open question:** {md(r['open_question'])}  \n**Ranking:** {md(r['rank_reason'])}")
+            for f in r.get("flags") or []:
+                st.warning(f)
             for s in r["cut_sheet"]["segments"]:
                 lines = [f"**Segment {s['seg']}** | {s['reel']} | {s['in_tc']} to {s['out_tc']} "
                          f"({s['in_ts']}-{s['out_ts']}, {s['dur_s']:.1f}s) | cut confidence: **{s['cut_confidence']}** "

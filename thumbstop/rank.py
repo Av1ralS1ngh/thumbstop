@@ -132,12 +132,15 @@ def post_first(chosen: list[Promo], n: int = 3, early_ep: int = 15) -> list[tupl
     """Which to post first: spoiler-safe, early-funnel, not HOLD, distinct hook types."""
     picks, used_types = [], set()
     def ok(p, strict):
+        # strict 2: early episode + new hook type; 1: new hook type only; 0: anything safe
         if p.policy.get("status") == "HOLD" or p.spoiler:
             return False
-        if strict and (p.episodes[0] > early_ep or p.hook_type in used_types):
+        if strict >= 2 and p.episodes[0] > early_ep:
+            return False
+        if strict >= 1 and p.hook_type in used_types:
             return False
         return (p.gate or {}).get("passed") is not False
-    for strict in (True, False):
+    for strict in (2, 1, 0):
         for p in chosen:
             if len(picks) >= n:
                 break

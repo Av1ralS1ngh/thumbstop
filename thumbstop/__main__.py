@@ -48,7 +48,7 @@ def main(argv=None) -> int:
         r.add_argument("--gate")
         r.add_argument("--repair")
         r.add_argument("--config")
-        r.add_argument("--fast", action="store_true", help="interview mode: gate top 12, no repair")
+        r.add_argument("--fast", action="store_true", help="interview mode: no repair, no seeds (every shown promo is still cold-checked)")
         r.add_argument("--offline", action="store_true", help="no network: rules-only annotator and gate")
         r.add_argument("--episodes", help="e.g. 1-10")
         r.add_argument("--top", type=int, default=20)
@@ -93,7 +93,7 @@ def main(argv=None) -> int:
               "the cold-viewer check is less independent. Prefer a different family for --gate.")
     opt = Options(top=a.top, gate=not a.no_gate, repair=not a.fast, episodes=_range(a.episodes), min_len=a.min,
                   max_len=a.max, exclude_policy=["violence"] if a.no_violence else [],
-                  hook_types=[h for h in a.hook_types.split(",") if h], gate_n=12 if a.fast else 40,
+                  hook_types=[h for h in a.hook_types.split(",") if h], gate_n=max(12, a.top + 4) if a.fast else max(40, a.top + 4),
                   no_notes=a.no_notes, seeds=not (a.no_seeds or a.fast))
     out.mkdir(parents=True, exist_ok=True)
     run(a.folder, out, router, opt)

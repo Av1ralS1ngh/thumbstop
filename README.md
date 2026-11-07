@@ -59,7 +59,7 @@ default judge, GPT-OSS-120B, is the same model Groq serves on its free tier.
 
 ## Interview / live mode
 
-- `--fast`: cold viewer checks only the top 12, no repair loop, no proposals (fastest run on a new show).
+- `--fast`: no repair loop and no proposals (fastest run on a new show); the cold viewer still checks every promo it shows.
 - `--offline`: rules only, no network - always prints promos.
 - What-if re-ranking: `--episodes 1-10`, `--min 15 --max 30`, `--no-violence`,
   `--hook-types physical_aggression,threat_ultimatum`. Episode annotations come from the cache, so only newly

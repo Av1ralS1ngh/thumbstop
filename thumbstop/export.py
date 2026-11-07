@@ -71,10 +71,13 @@ def promo_record(show: Show, p: Promo) -> dict:
         "rank": p.rank, "id": p.id, "source": p.source, "episodes": p.episodes, "duration_s": p.duration,
         "segments": [{k: s[k] for k in ("seg", "episode", "in_ts", "out_ts", "dur_s")} for s in cs["segments"]],
         "hook": cs["hook_quote"], "hook_type": p.hook_type, "cliffhanger": cs["cliff_quote"],
-        "cliff_type": p.cliff_type, "open_question": g.get("open_question") or p.open_question,
+        # the annotator's question names the characters; the cold viewer's uses anonymous labels (WOMAN 2),
+        # so it stays inside cold_viewer as "what a stranger asks" and never becomes the editor-facing line
+        "cliff_type": p.cliff_type, "open_question": p.open_question or g.get("open_question"),
         "why_it_works": p.why, "rank_reason": p.rank_reason, "variant": p.variant, "score": p.score,
-        "cold_viewer": {k: g.get(k) for k in ("passed", "premise", "unexplained", "hook_score", "cliff_score",
-                                              "standalone_score", "judge")} if g else None,
+        "cold_viewer": {k: g.get(k) for k in ("passed", "premise", "open_question", "intent_match", "intent_note",
+                                              "unexplained", "hook_score", "cliff_score", "standalone_score",
+                                              "judge")} if g else None,
         "policy": p.policy, "spoiler_note": p.spoiler, "repair": p.repair, "flags": p.flags, "cut_sheet": cs,
     }
 
@@ -176,10 +179,11 @@ def review_html(show: Show, recs: list[dict], picks: list, meta: dict) -> str:
  <p><b>Hook:</b> {html.escape(r['hook'])}<br><b>Cliffhanger:</b> {html.escape(r['cliffhanger'])}<br>
  <b>Open question:</b> {html.escape(r['open_question'] or '')}<br><b>Why it works:</b> {html.escape(r['why_it_works'] or '')}<br>
  <small>{html.escape(r['rank_reason'] or '')}</small></p>
+ {''.join(f'<p class="flag">&#9888; {html.escape(f)}</p>' for f in r['flags'])}
  <table><thead><tr><th>#</th><th>Reel</th><th>In</th><th>Out</th><th>Dur</th><th>Cut on</th><th>Cut confidence</th></tr></thead><tbody>{rows}</tbody></table>
  <details><summary>Paper edit</summary><pre>{html.escape(chr(10).join(cs['paper_edit']))}</pre></details>
  <details><summary>Cold viewer ({'pass' if cv.get('passed') else 'fail' if cv.get('passed') is False else 'n/a'})</summary>
-  <p>{html.escape(str(cv.get('premise') or ''))}<br><b>Lost on:</b> {html.escape(', '.join(cv.get('unexplained') or []) or 'nothing')}</p></details>
+  <p>{html.escape(str(cv.get('premise') or ''))}<br><b>A stranger asks:</b> {html.escape(str(cv.get('open_question') or '-'))}{f" <small>(matches the intended question {cv['intent_match']}/3)</small>" if cv.get('intent_match') is not None else ''}<br><b>Lost on:</b> {html.escape(', '.join(cv.get('unexplained') or []) or 'nothing')}</p></details>
  {('<details><summary>Policy evidence</summary><ul>' + ''.join(f"<li>{e['level']} {e['rule']}: {html.escape(e['evidence'])}</li>" for e in pol.get('evidence', [])) + '</ul></details>') if pol.get('evidence') else ''}
  <div class="decide"><button data-v="accept">Accept as is</button><button data-v="nudge">Accept with nudge</button>
   <label>in &plusmn;s <input type="number" step="0.1" class="nin"></label><label>out &plusmn;s <input type="number" step="0.1" class="nout"></label>
@@ -198,18 +202,23 @@ h1{{font-size:20px}} .card{{background:var(--card);border:1px solid var(--line);
 table{{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}} td,th{{border-top:1px solid var(--line);padding:6px;vertical-align:top;text-align:left}}
 .c-high{{color:var(--ok)}} .c-medium{{color:var(--warn)}} .c-low{{color:var(--bad)}} pre{{white-space:pre-wrap;font-size:12px}}
 .decide{{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}} button{{padding:5px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}}
-input{{width:60px}} .done{{outline:2px solid var(--ok)}} .bar{{position:sticky;top:0;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;flex-wrap:wrap}}
+.flag{{color:var(--warn);font-size:13px;margin:4px 0}} input{{width:60px}} .done{{outline:2px solid var(--ok)}} .bar{{position:sticky;top:0;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;flex-wrap:wrap}}
 </style></head><body>
 <h1>Promo review - {html.escape(show.name)}</h1>
-<div class="bar"><span>Reviewed <b id="n">0</b>/{len(recs)}</span><span>Timer <b id="t">0:00</b></span>
-<button id="exp">Download decisions (CSV)</button><small>Timecodes at {FPS} fps from script timestamps; confirm on picture.</small></div>
+<div class="bar"><span>Reviewed <b id="n">0</b>/{len(recs)}</span><span>Timer <b id="t">not started</b></span>
+<button id="go">Start timer</button><button id="exp">Download decisions (CSV)</button><button id="rst">Reset</button>
+<small>Timecodes at {FPS} fps from script timestamps; confirm on picture.</small></div>
 {''.join(cards)}
 <script>
 const KEY='promo-review-'+location.pathname; let st={{}}; try{{st=JSON.parse(localStorage.getItem(KEY)||'{{}}')}}catch(e){{}}
-const t0=st.__t0||Date.now(); st.__t0=t0; const save=()=>{{try{{localStorage.setItem(KEY,JSON.stringify(st))}}catch(e){{}}}};
-function paint(){{let n=0;document.querySelectorAll('.card').forEach(c=>{{const d=st[c.dataset.id];c.classList.toggle('done',!!d);c.querySelector('.state').textContent=d?d.v+(d.why?' ('+d.why+')':''):'';if(d)n++}});document.getElementById('n').textContent=n}}
-document.querySelectorAll('.card').forEach(c=>c.querySelectorAll('button').forEach(b=>b.onclick=()=>{{st[c.dataset.id]={{v:b.dataset.v,nin:c.querySelector('.nin').value,nout:c.querySelector('.nout').value,why:c.querySelector('.why').value,at:Math.round((Date.now()-t0)/1000)}};save();paint()}}));
-setInterval(()=>{{const s=Math.round((Date.now()-t0)/1000);document.getElementById('t').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}},1000);
-document.getElementById('exp').onclick=()=>{{const rows=[['promo_id','decision','nudge_in_s','nudge_out_s','reason','seconds_since_start']];for(const [k,d] of Object.entries(st)){{if(k==='__t0')continue;rows.push([k,d.v,d.nin,d.nout,d.why,d.at])}}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.join(',')).join('\\n')],{{type:'text/csv'}}));a.download='review_decisions.csv';a.click()}};
+let t0=st.__t0||null; const save=()=>{{try{{localStorage.setItem(KEY,JSON.stringify(st))}}catch(e){{}}}};
+const start=()=>{{if(!t0){{t0=Date.now();st.__t0=t0;save()}}}};
+const q=v=>{{v=String(v??'');return /[",\\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}};
+function paint(){{let n=0;document.querySelectorAll('.card').forEach(c=>{{const d=st[c.dataset.id];c.classList.toggle('done',!!d);c.querySelector('.state').textContent=d?d.v+(d.why?' ('+d.why+')':''):'';if(d){{n++;c.querySelector('.nin').value=d.nin;c.querySelector('.nout').value=d.nout;c.querySelector('.why').value=d.why}}}});document.getElementById('n').textContent=n;document.getElementById('go').disabled=!!t0}}
+document.querySelectorAll('.card').forEach(c=>c.querySelectorAll('button').forEach(b=>b.onclick=()=>{{start();st[c.dataset.id]={{v:b.dataset.v,nin:c.querySelector('.nin').value,nout:c.querySelector('.nout').value,why:c.querySelector('.why').value,at:Math.round((Date.now()-t0)/1000)}};save();paint()}}));
+setInterval(()=>{{const e=document.getElementById('t');if(!t0){{e.textContent='not started';return}}const s=Math.round((Date.now()-t0)/1000);e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}},1000);
+document.getElementById('go').onclick=()=>{{start();paint()}};
+document.getElementById('rst').onclick=()=>{{if(confirm('Clear all decisions and the timer?')){{st={{}};t0=null;save();document.querySelectorAll('.nin,.nout,.why').forEach(x=>x.value='');paint()}}}};
+document.getElementById('exp').onclick=()=>{{const rows=[['promo_id','decision','nudge_in_s','nudge_out_s','reason','seconds_since_start']];for(const [k,d] of Object.entries(st)){{if(k==='__t0')continue;rows.push([k,d.v,d.nin,d.nout,d.why,d.at])}}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(q).join(',')).join('\\n')],{{type:'text/csv'}}));a.download='review_decisions.csv';a.click()}};
 paint();
 </script></body></html>"""
