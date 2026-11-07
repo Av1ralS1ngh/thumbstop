@@ -62,7 +62,9 @@ default judge, GPT-OSS-120B, is the same model Groq serves on its free tier.
 - `--fast`: cold viewer checks only the top 12, no repair loop, no proposals (fastest run on a new show).
 - `--offline`: rules only, no network - always prints promos.
 - What-if re-ranking: `--episodes 1-10`, `--min 15 --max 30`, `--no-violence`,
-  `--hook-types physical_aggression,threat_ultimatum`. With a warm cache this costs nothing and takes seconds.
+  `--hook-types physical_aggression,threat_ultimatum`. Episode annotations come from the cache, so only newly
+  shortlisted clips need a cold-viewer check (about a minute and a few cents); add `--no-gate` for an instant, free
+  re-rank.
 - `python -m thumbstop ingest <folder>` / `estimate <folder>`: parse report / token and cost estimate, no calls.
 
 ## Evaluation

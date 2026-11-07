@@ -18,7 +18,8 @@ POLICY_RULES = [
     ("HOLD", "weapon_at_camera", re.compile(r"\b(points?|aims?) (a |the )?(gun|pistol|musket|sword|dagger|blade|knife)\b"
                                             r".{0,40}\b(camera|lens|at us)\b", re.I)),
     ("CHECK", "violence", re.compile(r"\b(slap\w*|punch\w*|shove\w*|whip\w*|beat(s|ing)?|strikes?|kick\w*|choke\w*|"
-                                     r"blood|wound\w*|gallows|hang\w*|execut\w*|poison\w*|explo\w*|fire|flames)\b", re.I)),
+                                     r"blood|wound\w*|gallows|hang\w*|execut\w*|poison\w*|explo\w*|fire|flames|club|cudgel|sword|dagger|knife|"
+                                     r"blade|gun|pistol|musket|weapon\w*|attack\w*|fight\w*|crush\w*|brawl\w*)\b", re.I)),
     ("CHECK", "minor_present", re.compile(r"\b(child|children|little (boy|girl|one)|kid|toddler|baby|infant)\b", re.I)),
 ]
 
