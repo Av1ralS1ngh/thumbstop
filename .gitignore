@@ -25,3 +25,6 @@ __pycache__/
 
 # agent worktrees / local tooling
 .claude/
+
+# the solution doc mentions episodes/scenes of the confidential show - submitted as PDF, never pushed
+docs/solution_doc*
