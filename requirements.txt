@@ -9,3 +9,4 @@ anthropic>=2.6,<3
 openai>=3.46,<4
 boto3>=1.43,<2
 python-dotenv>=1.2,<2
+pysubs2>=1.9,<2

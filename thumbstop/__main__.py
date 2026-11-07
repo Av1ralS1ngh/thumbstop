@@ -59,6 +59,7 @@ def main(argv=None) -> int:
         r.add_argument("--no-gate", action="store_true")
         r.add_argument("--budget-usd", type=float, default=None)
         r.add_argument("--no-notes", action="store_true", help="ablation: ignore writers' continuity notes")
+        r.add_argument("--no-seeds", action="store_true", help="skip model-proposed whole promos (anchored search only)")
     for name in ("ingest", "estimate"):
         s = sub.add_parser(name)
         s.add_argument("folder")
@@ -93,7 +94,7 @@ def main(argv=None) -> int:
     opt = Options(top=a.top, gate=not a.no_gate, repair=not a.fast, episodes=_range(a.episodes), min_len=a.min,
                   max_len=a.max, exclude_policy=["violence"] if a.no_violence else [],
                   hook_types=[h for h in a.hook_types.split(",") if h], gate_n=12 if a.fast else 40,
-                  no_notes=a.no_notes)
+                  no_notes=a.no_notes, seeds=not (a.no_seeds or a.fast))
     out.mkdir(parents=True, exist_ok=True)
     run(a.folder, out, router, opt)
     print(f"\nOutputs in {out}/ : promos.json, promos.csv, report.md, review.html, selects.edl, trace.jsonl")

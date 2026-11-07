@@ -13,6 +13,8 @@ HOOK_WINDOW = 3.0          # hook beat must start within 3 s of promo start
 OVERLAP_TOL = 0.4          # dialogue may overlap a cut point by this much without counting as mid-line
 END_SNAP = 3.0             # an end inside a spoken line may be pushed to the line's end by at most this
 TIGHT_MAX = 32.0
+CONTEXT_MIN_LEN = 38.0      # openings rated needs_context>=1 should keep this much setup
+CONTEXT_TIGHT_PENALTY = 7.0
 
 
 @dataclass
@@ -186,6 +188,10 @@ def anchored_candidates(show: Show, anns: dict[int, EpisodeAnnotation], lo: floa
                 fit = fit if (lo, hi) == (MIN_LEN, MAX_LEN) else 1.0
                 score = 100 * (0.37 * hook_s + 0.37 * cliff_s - 0.2 * ctx + 0.08 * fit
                                + (0.06 if confirmed else 0) + (0.03 if ann.ending_is_cliffhanger and confirmed else 0))
+                # Learned from the blind test: tight cuts on openings that need some context lost half the time,
+                # while the fuller cut with more setup won. Prefer the longer cut when context is needed.
+                if hp.needs_context >= 1 and dur < CONTEXT_MIN_LEN:
+                    score -= CONTEXT_TIGHT_PENALTY * hp.needs_context
                 out.append(Promo(
                     id="", source="anchored", segments=[make_segment(ep, start, end)], hook_beat=h.id,
                     cliff_beat=a.id, hook_type=hp.type, cliff_type=cp.type, hook_strength=hp.strength,

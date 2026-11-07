@@ -14,6 +14,7 @@ from .gate import gate_all, repair_one
 from .llm import BudgetExceeded, LLMError, Router
 from .parse import ingest_report, parse_show
 from .rank import final_score, policy_status, post_first, select, spoiler_note
+from .baselines import proposed
 from .search import MAX_LEN, MIN_LEN, Promo, anchored_candidates, assign_ids, best_per_moment, validate
 
 
@@ -30,6 +31,7 @@ class Options:
     hook_types: list[str] = field(default_factory=list)
     early_ep: int = 15
     no_notes: bool = False         # ablation: ignore the writers' continuity notes
+    seeds: bool = True             # also let the model propose whole promos (validated + judged like the rest)
 
 
 def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) -> dict:
@@ -60,6 +62,11 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
     log("[2/5] anchored search ...")
     cands = anchored_candidates(show, anns, opt.min_len, opt.max_len)
     funnel["raw_candidates"] = len(cands)
+    if opt.seeds and router["propose"].p.provider != "rules":
+        log("  + model-proposed whole promos (seeds) ...")
+        seeds = seed_candidates(show, anns, router["propose"], opt, log)
+        funnel["seed_candidates"] = len(seeds)
+        cands += seeds
     pool = best_per_moment(cands)
     assign_ids(pool)
     for p in pool:
@@ -124,3 +131,25 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
         [dict(p.to_dict(), final_score=final_score(p)) for p in pool + repaired], indent=1, default=str))
     log(f"Done in {meta['seconds']}s | calls {u.calls} (+{u.cache_hits} cached) | est. ${u.usd:.2f} | funnel {funnel}")
     return {"show": show, "anns": anns, "pool": pool, "short": short, "ranked": ranked, "picks": picks, "meta": meta}
+
+
+def seed_candidates(show, anns, llm, opt: Options, log=print) -> list[Promo]:
+    """Model-proposed whole promos, kept only if they pass the same validator. Scored from the annotation:
+    credit if the opening is a ranked hook beat and the ending a ranked cliffhanger beat."""
+    out = []
+    for p in proposed(show, llm, log=log):
+        if validate(show, p, opt.min_len, opt.max_len):
+            continue
+        ann = anns.get(p.episodes[-1])
+        hooks = {h.beat_id: h for h in (ann.hooks if ann else [])}
+        cliffs = {c.beat_id: c for c in (ann.cliffhangers if ann else [])}
+        h, c = hooks.get(p.hook_beat), cliffs.get(p.cliff_beat)
+        p.hook_strength, p.cliff_strength = (h.strength if h else 1), (c.strength if c else 1)
+        p.needs_context = h.needs_context if h else 1
+        p.hook_type, p.cliff_type = (h.type if h else "other"), (c.type if c else "other")
+        p.open_question = c.open_question if c else ""
+        p.score = round(100 * (0.37 * p.hook_strength / 3 + 0.37 * p.cliff_strength / 3 - 0.2 * p.needs_context / 3
+                               + 0.08), 2)
+        p.variant = "full"
+        out.append(p)
+    return out
