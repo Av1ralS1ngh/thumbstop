@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thumbstop · find the promo in every episode</title>
-<meta name="description" content="Thumbstop reads a season of microdrama scripts and finds 20 to 60 second promos that open on a hook, end on a cliffhanger and make sense to a stranger.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thumbstop · promo finder for microdrama scripts</title>
+<meta name="description" content="Thumbstop reads a season of timestamped microdrama scripts and returns 20 to 60 second promos that open on a hook, end on a cliffhanger and make sense to a stranger, with a cut sheet for the editor.">
 <meta name="theme-color" content="#0b0a08">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23d9b46a'/%3E%3Cpath d='M13 10l9 6-9 6z' fill='%231b1408'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,31 +13,20 @@
 <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body class="tsr-page app">
-<header class="topbar" id="topbar"><div class="nav">
+<header class="topbar" id="topbar"><div class="nav wrap">
   <a class="logo" href="/"><span class="tsr-mark"></span><b>Thumbstop</b></a>
   <nav aria-label="Sections"><a href="#run" data-nav="run">Try it</a><a href="#how" data-nav="how">How it works</a><a href="#results" data-nav="results" id="nav-results" hidden>Results</a><a class="gh" href="https://github.com/Av1ralS1ngh/thumbstop" target="_blank" rel="noopener">GitHub ↗</a></nav>
 </div></header>
 
 <main>
-  <section class="hero">
+  <section class="hero wrap" id="top">
     <div class="hero-copy">
-      <div class="tsr-eyebrow">Promo finder for microdrama scripts</div>
-      <h1>Find the promo <em>hiding</em> in every episode.</h1>
-      <p class="lede">Give it a season of timestamped scripts. Thumbstop finds the 20 to 60 second clips that open on a hook
-        in the first 3 seconds, end on a cliffhanger and still make sense to a stranger, ranks them, and tells you which to post first.</p>
-      <div class="hero-show">
-        <figure class="teaser" aria-label="A promo Thumbstop found in the demo show, playing from its script">
-          <div class="teaser-phone" id="teaser"></div>
-          <figcaption>A promo it found, playing from the script</figcaption>
-        </figure>
-        <ul class="facts">
-          <li><b>3 s</b> hook, every time</li>
-          <li><b>0</b> lines cut in half</li>
-          <li><b>2</b> AI models, one checks the other</li>
-          <li><b>~$2.70</b> for a 50-episode show</li>
-        </ul>
-      </div>
+      <h1>Promo finder for microdrama scripts</h1>
+      <p class="lede">Thumbstop reads a season of timestamped screenplays and returns the 20 to 60 second promos that open on a hook,
+        end on a cliffhanger and make sense to a stranger, each with a cut sheet an editor can use.</p>
+      <p class="fact">About $2.70 in model calls for a 50-episode show, and every re-run is free.</p>
     </div>
+    <div class="teaser" id="teaser" aria-label="A promo found in the demo show, playing from its script"></div>
 
     <form class="run" id="run" novalidate>
       <div class="run-h"><b>Try it</b><span id="run-badge">No key needed</span></div>
@@ -87,24 +76,48 @@
     </form>
   </section>
 
-  <section class="how" id="how">
+  <section class="how wrap" id="how">
     <div class="how-h">
-      <div><div class="tsr-eyebrow">How it works</div><h2>Five steps, and the AI never writes a timestamp</h2></div>
-      <p id="how-note">Code does the counting and cutting. The AI only points at numbered lines, so a cut point can't be made up.</p>
+      <h2>How a run works</h2>
+      <p>Code does the counting and the cutting. The AI only points at numbered lines, so a cut point can't be made up.</p>
     </div>
-    <ol class="steps" id="steps">
-      <li><span class="n">1</span><b>Read</b><p>Every line of every script becomes a numbered beat with its timestamps.</p><small>Code</small><em></em></li>
-      <li><span class="n">2</span><b>Mark</b><p>Claude reads each episode and points at the lines worth opening on and ending on.</p><small>AI</small><em></em></li>
-      <li><span class="n">3</span><b>Cut</b><p>Every opening and ending pair is tried against the rules: 20 to 60 s, hook in 3 s, clean cuts.</p><small>Code</small><em></em></li>
-      <li><span class="n">4</span><b>Check</b><p>A different model watches each clip cold and says whether a stranger would follow it.</p><small>AI</small><em></em></li>
-      <li><span class="n">5</span><b>Rank</b><p>Best first, with variety, ad-policy status, cut sheets, an EDL and what to post first.</p><small>Code</small><em></em></li>
-    </ol>
+    <div class="how-grid">
+      <ol class="steps" id="steps">
+        <li><span class="n">1</span><div><b>Read</b><p>Every line of every script becomes a numbered beat with its start and end time.</p><em></em></div><small>Code</small></li>
+        <li><span class="n">2</span><div><b>Mark</b><p>Claude reads one episode at a time and points at the lines worth opening on and ending on.</p><em></em></div><small>AI</small></li>
+        <li><span class="n">3</span><div><b>Cut</b><p>Code tries every opening and ending pair against the rules: 20 to 60 s, a hook in 3 s, no line cut in half.</p><em></em></div><small>Code</small></li>
+        <li><span class="n">4</span><div><b>Check</b><p>A second model that has never seen the show watches each clip cold and says if a stranger would follow it.</p><em></em></div><small>AI</small></li>
+        <li><span class="n">5</span><div><b>Rank</b><p>Code ranks, keeps variety, flags ad-policy risk and picks what to post first.</p><em></em></div><small>Code</small></li>
+      </ol>
+      <figure class="frame" aria-label="One promo from the demo show: the beats the model reads, the IDs it answers with, and the cut the code makes">
+        <div class="frame-h"><span>One promo from the demo show, end to end</span><span class="mono">episode 2</span></div>
+        <div class="fblock">
+          <div class="flabel">What the model reads</div>
+          <pre><code><span class="id">E02-B020</span> <span class="tc">00:57.40–01:00.40</span> MIRA VOSS (Defiant): "My father built this tower. You just rent an office in it."
+<mark><span class="id">E02-B021</span> <span class="tc">01:00.80–01:03.00</span> SERENA COLE (Furious, Shouting): "Sign it, or I end you tonight!"</mark>
+<span class="id">E02-B022</span> <span class="tc">01:03.40–01:06.00</span> ACTION: A guard grabs MIRA's wrist and forces the pen into her hand.
+<span class="id">E02-B023</span> <span class="tc">01:06.40–01:09.40</span> AUGUSTINE PELL (Commanding): "Let her go. The board is watching this feed live."</code></pre>
+        </div>
+        <div class="fblock">
+          <div class="flabel">What it answers</div>
+          <pre><code><span class="k">hook</span>    beat <span class="id">E02-B021</span>  strength 3  type threat_ultimatum  needs_context 0
+<span class="k">ending</span>  beat <span class="id">E02-B031</span>  strength 3  type reveal_about_to_land
+        question "What is in Serena's second envelope that makes her smile back?"</code></pre>
+        </div>
+        <div class="fblock">
+          <div class="flabel">What the code cuts</div>
+          <pre><code><span class="id">E02-B021</span> → <span class="id">E02-B031</span>   <span class="tc">00:01:00:24 → 00:01:32:00</span>   31.2 s
+<span class="ok">✓</span> hook at 0.0 s   <span class="ok">✓</span> no line cut in half   <span class="ok">✓</span> 20 to 60 s   <span class="ok">✓</span> a cold viewer followed it</code></pre>
+        </div>
+      </figure>
+    </div>
+    <div class="how-cta"><a class="tsr-btn" href="#run">Try it on the demo show</a><span>Runs in about a second, with no key.</span></div>
   </section>
 
-  <section class="results" id="results" hidden></section>
+  <section class="results wrap" id="results" hidden></section>
 </main>
 
-<footer class="foot">
+<footer class="foot wrap">
   <p>Uploaded scripts are processed in a temporary folder that is deleted when the run ends. Results stay in this server's
     memory for an hour so you can download them, and any API key is used for that one run and never stored.</p>
   <p>Thumbstop · built for the Kuku AI Generalist assignment · <a href="https://github.com/Av1ralS1ngh/thumbstop" target="_blank" rel="noopener">source on GitHub</a></p>

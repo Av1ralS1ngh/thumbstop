@@ -36,6 +36,7 @@ episodes -> [code]  parse into numbered beats (E07-B031: start, end, speaker, te
          -> [AI]    per episode: rank the few cliffhanger beats to cut after and the hook beats to open on
          -> [code]  anchored search: every hook -> cliffhanger pair that makes a valid 20-60 s clip
                     (+ the model's own whole-promo proposals, validated the same way)
+                    (a proposal whose ends the annotator did not rank gets its strengths from the cold viewer instead)
                     validator: hook within 3 s, no mid-line cut, <=3 segments, cliffhanger at the end
          -> [AI, a different model family] cold viewer reads ONLY the clip: hook / cliffhanger / makes-sense
          -> [agent loop, <=2 rounds] if the viewer is lost, the model picks one earlier setup moment; re-checked

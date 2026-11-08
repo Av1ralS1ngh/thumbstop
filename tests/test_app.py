@@ -51,7 +51,7 @@ def _fixture_zip() -> bytes:
 
 def test_page_and_info(client):
     r = client.get("/")
-    assert r.status_code == 200 and "Find the promo" in r.text and "/assets/review.js" in r.text
+    assert r.status_code == 200 and "Promo finder for microdrama scripts" in r.text and "/assets/review.js" in r.text
     assert client.get("/assets/review.js").status_code == 200 and client.get("/health").text == "ok"
     info = client.get("/api/info").json()
     assert info["default"] == "recorded" and [m["id"] for m in info["modes"]] == ["recorded", "offline", "bedrock", "custom"]

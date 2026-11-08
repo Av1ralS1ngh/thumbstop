@@ -155,7 +155,8 @@ def post_first(chosen: list[Promo], n: int = 3, early_ep: int = 15) -> list[tupl
             reasons = []
             if p.episodes[0] <= early_ep:
                 reasons.append(f"from episode {p.episodes[0]}, so a new viewer reaches the payoff within the free early episodes")
-            reasons.append(f"opens on {HOOK_PHRASE.get(p.hook_type, 'a strong moment')} and leaves the question \"{p.open_question}\" open")
+            reasons.append(f"opens on {HOOK_PHRASE.get(p.hook_type, 'a strong moment')}"
+                           + (f" and leaves the question \"{p.open_question}\" open" if p.open_question else " and ends unresolved"))
             if p.policy.get("status") == "CLEAR":
                 reasons.append("no ad-policy flags")
             picks.append((p, "; ".join(reasons)))

@@ -67,6 +67,16 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
         log("  + model-proposed whole promos (seeds) ...")
         seeds = seed_candidates(show, anns, router["propose"], opt, log)
         funnel["seed_candidates"] = len(seeds)
+        # A proposal that opens or ends on a moment the annotator did not rank used to score as if both were weak,
+        # so the model's own whole-promo ideas could never compete (the ep 34 courtroom opening in the blind test).
+        # Now the cold viewer, a different model family, rates those moments instead; it is a tough critic, so
+        # only proposals it rates 3/3 reach the top of the list.
+        unranked = [p for p in seeds if any(getattr(p, "_unranked", (False, False)))]
+        if opt.gate and unranked and router["gate"].p.provider != "rules":
+            log(f"  second opinion from the cold viewer on {len(unranked)} proposals the annotator did not rank ...")
+            gate_all(show, anns, unranked, router["gate"], log=log)
+            funnel["second_opinion"] = len(unranked)
+            funnel["second_opinion_strong"] = rescore_from_second_opinion(unranked)
         cands += seeds
     pool = best_per_moment(cands)
     assign_ids(pool)
@@ -177,10 +187,35 @@ def seed_candidates(show, anns, llm, opt: Options, log=print) -> list[Promo]:
         p.needs_context = h.needs_context if h else 1
         p.hook_type, p.cliff_type = (h.type if h else "other"), (c.type if c else "other")
         p.open_question = c.open_question if c else ""
-        p.score = 100 * (0.37 * p.hook_strength / 3 + 0.37 * p.cliff_strength / 3 - 0.2 * p.needs_context / 3 + 0.08)
-        if p.needs_context >= 1 and p.duration < CONTEXT_MIN_LEN:   # same rule as anchored search
-            p.score -= CONTEXT_TIGHT_PENALTY * p.needs_context
-        p.score = round(p.score, 2)
+        p._unranked = (h is None, c is None)   # transient: which ends still need a second opinion
+        p.score = seed_score(p)
         p.variant = "full"
         out.append(p)
     return out
+
+
+def seed_score(p: Promo) -> float:
+    """The anchored search's formula, for a proposal's single segment (no within-episode rank or note bonus)."""
+    score = 100 * (0.37 * p.hook_strength / 3 + 0.37 * p.cliff_strength / 3 - 0.2 * p.needs_context / 3 + 0.08)
+    if p.needs_context >= 1 and p.duration < CONTEXT_MIN_LEN:   # same rule as anchored search
+        score -= CONTEXT_TIGHT_PENALTY * p.needs_context
+    return round(score, 2)
+
+
+def rescore_from_second_opinion(promos: list[Promo]) -> int:
+    """Proposals whose opening or ending the annotator never ranked take that strength from the cold viewer's
+    scores (0-3 on the same scale). Returns how many came out strong on both ends."""
+    strong = 0
+    for p in promos:
+        g = p.gate or {}
+        hook_missing, cliff_missing = getattr(p, "_unranked", (False, False))
+        if g.get("passed") is None:      # the check itself failed: keep the cautious default
+            continue
+        if hook_missing:
+            p.hook_strength = max(1, int(g.get("hook_score") or 1))
+            p.needs_context = max(0, 3 - int(g.get("standalone_score") or 0))
+        if cliff_missing:
+            p.cliff_strength = max(1, int(g.get("cliff_score") or 1))
+        p.score = seed_score(p)
+        strong += p.hook_strength >= 3 and p.cliff_strength >= 3
+    return strong

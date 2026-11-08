@@ -223,7 +223,7 @@
   });
 
   fetch("/assets/teaser.json", { cache: "no-store" }).then((r) => r.json())
-    .then((d) => window.ThumbstopReview.teaser($("#teaser"), d.promo)).catch(() => { $(".teaser").hidden = true; });
+    .then((d) => window.ThumbstopReview.teaser($("#teaser"), d.promo)).catch(() => { $("#teaser").hidden = true; });
 
   // the top bar: a hairline once the page scrolls, and the section you're in
   const topbar = $("#topbar"), navLinks = [...document.querySelectorAll("[data-nav]")];

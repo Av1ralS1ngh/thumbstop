@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import re
 from pathlib import Path
 
 from .annotate import RULES_QUESTION
@@ -77,7 +78,7 @@ def promo_record(show: Show, p: Promo) -> dict:
         "hook": cs["hook_quote"], "hook_type": p.hook_type, "cliffhanger": cs["cliff_quote"],
         # the annotator's question names the characters; the cold viewer's uses anonymous labels (WOMAN 2),
         # so it stays inside cold_viewer as "what a stranger asks" and never becomes the editor-facing line
-        "cliff_type": p.cliff_type, "open_question": p.open_question or g.get("open_question"),
+        "cliff_type": p.cliff_type, "open_question": p.open_question,
         "why_it_works": p.why, "rank_reason": p.rank_reason, "variant": p.variant, "score": p.score,
         "cold_viewer": {k: g.get(k) for k in ("passed", "premise", "open_question", "intent_match", "intent_note",
                                               "unexplained", "hook_score", "cliff_score", "standalone_score",
@@ -221,10 +222,18 @@ def _say_item(it: dict) -> str:
     return f'{it["who"]}: "{it["text"]}"' if it["who"] else f'"{it["text"]}"'
 
 
+_ANON = re.compile(r"\b(WOMAN|MAN|PERSON)\s?\d", re.I)
+
+
 def _title(r: dict) -> str:
+    """The question the promo leaves open: the writer's, else the stranger's when it names no anonymous label,
+    else the cliffhanger line itself."""
     q = (r.get("open_question") or "").strip()
     if q and q != RULES_QUESTION and not q.startswith("(rules)"):
         return q
+    sq = ((r.get("cold_viewer") or {}).get("open_question") or "").strip()
+    if sq and not _ANON.search(sq):
+        return sq[:1].upper() + sq[1:]
     return r["cliffhanger"]
 
 
