@@ -23,7 +23,7 @@
   height: calc(100svh - var(--nav)); min-height: 700px; padding-top: 24px; padding-bottom: 64px; scroll-margin-top: var(--nav); }
 .hero h1 { margin: 6px 0 18px; font: 600 clamp(36px, 3.6vw, 50px)/1.06 var(--sans); letter-spacing: -.035em; text-wrap: balance; }
 .hero .lede { margin: 0; color: var(--ink2); font-size: 17px; line-height: 1.55; text-wrap: pretty; max-width: 540px; }
-.hero .fact { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink3); font-size: 14.5px; max-width: 540px; }
+.hero .fact { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink2); font-size: 14.5px; max-width: 540px; }
 .teaser { width: 300px; }
 .teaser .tsr-phone { --phw: 300px; border-radius: 30px; cursor: default; }
 .teaser .tsr-scrub, .teaser .tsr-ctrls, .teaser .ph-end small, .teaser .ph-replay, .teaser .ph-who em { display: none; }
@@ -124,7 +124,7 @@
   border: 1px solid var(--line2); color: var(--ink2); transition: background .3s, color .3s, border-color .3s; }
 .steps b { display: block; font-size: 15.5px; font-weight: 600; margin: 5px 0 4px; }
 .steps p { margin: 0; color: var(--ink3); font-size: 13.5px; line-height: 1.45; }
-.steps small { font: 500 10.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink4); margin-top: 11px; }
+.steps small { font: 500 10.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin-top: 11px; }
 .steps em { display: block; margin-top: 8px; font: 500 12.5px/1.35 var(--mono); font-style: normal; color: var(--gold2); }
 .steps em:empty { display: none; }
 .steps li.active .n { border-color: var(--gold); color: var(--gold2); animation: pulse 1.2s var(--ease) infinite; }
@@ -133,7 +133,7 @@
 .frame { margin: 0; border-radius: 18px; border: 1px solid var(--line2); background: var(--bg2); overflow: hidden; }
 .frame-h { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line);
   font-size: 13.5px; font-weight: 600; color: var(--ink2); }
-.frame-h .mono { color: var(--ink4); font-weight: 500; }
+.frame-h .mono { color: var(--ink3); font-weight: 500; }
 .fblock { padding: 14px 18px 16px; border-bottom: 1px solid var(--line); }
 .fblock:last-child { border-bottom: 0; }
 .flabel { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
