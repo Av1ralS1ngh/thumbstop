@@ -1,4 +1,4 @@
-"""Thumbstop hosted app: a small Starlette server behind the single-page UI in thumbstop/web.
+"""Bangerz hosted app: a small Starlette server behind the single-page UI in thumbstop/web.
 
     .venv/bin/uvicorn server:app --port 8501        # then open http://localhost:8501/?demo=1
 

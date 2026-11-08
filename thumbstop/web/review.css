@@ -1,5 +1,5 @@
 [hidden] { display: none !important; }
-/* Thumbstop review desk: the shared look for the hosted app's results and the standalone review.html.
+/* Bangerz review desk: the shared look for the hosted app's results and the standalone review.html.
    Warm black and gold. Everything lives under .tsr so it can sit inside another page. */
 .tsr, .tsr-page {
   --bg: #0b0a08; --bg2: #12100d; --bg3: #191612;

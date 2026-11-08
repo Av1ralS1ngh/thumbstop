@@ -1,5 +1,5 @@
 #!/bin/bash
-# Boot script for a small Amazon Linux 2023 EC2 server that runs the Thumbstop app from the public repo.
+# Boot script for a small Amazon Linux 2023 EC2 server that runs the Bangerz app from the public repo.
 # The server has no AWS credentials or instance role on purpose: the default mode replays the recorded demo
 # answers, and live model modes need the visitor's own key, so nobody can spend the owner's account.
 # CloudFront sits in front for HTTPS; the security group only lets CloudFront reach port 8501.
@@ -29,7 +29,7 @@ fi
 set -x
 cat > /etc/systemd/system/thumbstop.service <<'EOF'
 [Unit]
-Description=Thumbstop promo finder (uvicorn)
+Description=Bangerz promo finder (uvicorn)
 After=network-online.target
 Wants=network-online.target
 

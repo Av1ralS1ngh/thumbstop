@@ -70,7 +70,7 @@ def test_recorded_demo_replays_with_no_key_or_network(client):
     csv = client.get(f"/api/jobs/{d['job_id']}/files/promos.csv")
     assert csv.status_code == 200 and csv.text.startswith("rank,promo_id")
     page = client.get(f"/api/jobs/{d['job_id']}/files/review.html").text
-    assert "ThumbstopReview.mount" in page and 'id="review-data"' in page
+    assert "BangerzReview.mount" in page and 'id="review-data"' in page
 
 
 def test_offline_demo_run(client):

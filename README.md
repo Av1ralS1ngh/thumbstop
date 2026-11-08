@@ -1,4 +1,4 @@
-# Thumbstop
+# Bangerz
 
 Finds the best 20-60 second promos in a microdrama's timestamped screenplays: a hook in the first 3 seconds, a
 cliffhanger ending, and a clip that makes sense to someone who has never seen the show. For each promo it gives an
@@ -6,7 +6,7 @@ editor-ready cut sheet (episode, in/out timecodes for every segment, the hook, t
 ranks them, and says which to post first.
 
 **The idea:** writers already end most episodes on a cliffhanger, so "take the last 45 seconds" is a strong
-baseline. What it gets wrong is the opening. Thumbstop keeps the writer's cliffhanger as the ending and searches
+baseline. What it gets wrong is the opening. Bangerz keeps the writer's cliffhanger as the ending and searches
 for an opening a stranger can follow.
 
 ## Quick start

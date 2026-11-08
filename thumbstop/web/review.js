@@ -1,5 +1,5 @@
-/* Thumbstop review desk: one component for the hosted app's results and the standalone review.html.
-   ThumbstopReview.mount(element, view, {standalone, downloads}) renders from the JSON that export.review_data writes.
+/* Bangerz review desk: one component for the hosted app's results and the standalone review.html.
+   BangerzReview.mount(element, view, {standalone, downloads}) renders from the JSON that export.review_data writes.
    The phone is an animatic: there is no footage, so it plays the script at its real timings, with the shot as the
    picture and the dialogue as captions, with the hook and the cliffhanger called out. */
 (function () {
@@ -238,7 +238,7 @@
       ? `<details class="tsr-dl"><summary class="tsr-btn">Download<span class="chev" aria-hidden="true"></span></summary><div class="tsr-menu">${opts.downloads.map((d) =>
           `<a href="${esc(d.href)}" download="${esc(d.name || "")}"><b>${esc(d.label)}</b>${d.desc ? `<small>${esc(d.desc)}</small>` : ""}</a>`).join("")}</div></details>` : "";
     const lede = P.length
-      ? `Thumbstop read all ${view.episodes} episodes and found <b>${P.length} promos</b>, best first.` +
+      ? `Bangerz read all ${view.episodes} episodes and found <b>${P.length} promos</b>, best first.` +
         (firsts.length ? ` <b>Post these ${firsts.length} first</b>, then work down the list.` : "") +
         ` Press play to watch each one run from the script, then accept, nudge or reject it.`
       : "No clip passed the hard rules (length, a hook in the first 3 seconds, a cliffhanger at the end, no cut in the middle of a line). Try a wider length range or more episodes.";
@@ -247,7 +247,7 @@
 <section class="tsr">
   <header class="tsr-head">
     <div class="tsr-head-top">
-      <div>${opts.standalone ? `<div class="tsr-brand"><span class="tsr-mark"></span><b>Thumbstop</b><span>· promo review</span></div>` : `<div class="tsr-eyebrow">Results</div>`}
+      <div>${opts.standalone ? `<div class="tsr-brand"><span class="tsr-mark"></span><b>Bangerz</b><span>· promo review</span></div>` : `<div class="tsr-eyebrow">Results</div>`}
         <h1>${esc(view.show)}</h1></div>
       ${downloads}
     </div>
@@ -554,5 +554,5 @@
     return pl;
   }
 
-  window.ThumbstopReview = { mount, teaser };
+  window.BangerzReview = { mount, teaser };
 })();

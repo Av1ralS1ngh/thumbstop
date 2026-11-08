@@ -1,4 +1,4 @@
-/* Thumbstop hosted app shell: pick scripts and a model, run, watch the five steps light up, then review the promos.
+/* Bangerz hosted app shell: pick scripts and a model, run, watch the five steps light up, then review the promos.
    The results are the same review desk as the standalone review.html (review.js). */
 (function () {
   "use strict";
@@ -202,7 +202,7 @@
     results.innerHTML = notes.map((t) => `<p class="notice">${esc(t)}</p>`).join("") + `<div id="review-root"></div>`;
     results.hidden = false;
     $("#nav-results").hidden = false;
-    review = window.ThumbstopReview.mount($("#review-root"), res.view, {
+    review = window.BangerzReview.mount($("#review-root"), res.view, {
       downloads: res.files.map((name) => ({ label: (FILES[name] || [name])[0], desc: (FILES[name] || [])[1], href: `/api/jobs/${jid}/files/${name}`, name })),
     });
     // the results appear right under the steps; point the way only when they start below the screen
@@ -223,7 +223,7 @@
   });
 
   fetch("/assets/teaser.json", { cache: "no-store" }).then((r) => r.json())
-    .then((d) => window.ThumbstopReview.teaser($("#teaser"), d.promo)).catch(() => { $(".teaser").hidden = true; });
+    .then((d) => window.BangerzReview.teaser($("#teaser"), d.promo)).catch(() => { $(".teaser").hidden = true; });
 
   // the top bar: a hairline once the page scrolls, and the section you're in
   const topbar = $("#topbar"), navLinks = [...document.querySelectorAll("[data-nav]")];

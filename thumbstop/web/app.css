@@ -1,4 +1,4 @@
-/* Thumbstop hosted app shell: hero + run panel, the five steps (which double as live progress), results. */
+/* Bangerz hosted app shell: hero + run panel, the five steps (which double as live progress), results. */
 .app { min-height: 100vh; --tsr-top: 80px; }
 .app main, .app .nav, .app .foot { max-width: 1320px; margin: 0 auto; padding-left: 28px; padding-right: 28px; }
 .app a { color: inherit; }

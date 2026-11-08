@@ -322,6 +322,6 @@ def review_html(view: dict) -> str:
 <body class="tsr-page"><main class="tsr-wrap" id="review"></main>
 <script type="application/json" id="review-data">{data}</script>
 <script>{js}</script>
-<script>ThumbstopReview.mount(document.getElementById("review"), JSON.parse(document.getElementById("review-data").textContent), {{standalone: true}});</script>
+<script>BangerzReview.mount(document.getElementById("review"), JSON.parse(document.getElementById("review-data").textContent), {{standalone: true}});</script>
 </body></html>
 """
