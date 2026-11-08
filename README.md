@@ -33,22 +33,22 @@ nudge / reject; `review.json` is the same data), `selects.edl`
 
 ```
 episodes -> [code]  parse into numbered beats (E07-B031: start, end, speaker, text); fail loudly with file:line
-         -> [AI]    per episode: rank the few cliffhanger beats to cut after and the hook beats to open on
+         -> [LLM]   per episode (Claude Opus 4.6): rank the few cliffhanger beats to cut after and the hook beats to open on
          -> [code]  anchored search: every hook -> cliffhanger pair that makes a valid 20-60 s clip
                     (+ the model's own whole-promo proposals, validated the same way)
                     (a proposal whose ends the annotator did not rank gets its strengths from the cold viewer instead)
                     validator: hook within 3 s, no mid-line cut, <=3 segments, cliffhanger at the end
-         -> [AI, a different model family] cold viewer reads ONLY the clip: hook / cliffhanger / makes-sense
-         -> [agent loop, <=2 rounds] if the viewer is lost, the model picks one earlier setup moment; re-checked
+         -> [2nd LLM, another company: GPT-OSS-120B] cold viewer reads ONLY the clip: hook / cliffhanger / makes-sense
+         -> [agent loop, <=2 rounds] if the viewer is lost, the first LLM picks one earlier setup moment; re-checked
          -> [code]  rank, diversity (<=2 per episode, no overlaps), ad-policy status, post-first picks, exports
-                    (experiment, off by default: --judge lets Claude re-order the best 30 side by side. It
+                    (experiment, off by default: --judge lets the LLM re-order the best 30 side by side. It
                     agreed with my 33 blind picks less often than the score order, and so did the same judge
                     taught my own standard or given the knowledge layer in thumbstop/knowledge/; see
                     `python -m thumbstop.evaluate judge`)
          -> [human] editor accepts / nudges / rejects in review.html
 ```
 
-Models never write timestamps or quotes: they point at beat IDs and code does all time arithmetic, so a cut
+The LLMs never write timestamps or quotes: they point at beat IDs and plain code does all time arithmetic, so a cut
 point or a quote cannot be hallucinated. Every model call is cached (re-runs are free and identical), traced, and
 capped by a budget.
 
