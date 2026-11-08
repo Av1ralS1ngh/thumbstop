@@ -11,7 +11,7 @@ from pathlib import Path
 from .annotate import EpisodeAnnotation, annotate_show
 from .export import write_all
 from .gate import clip_text, drift_flag, gate_all, repair_one
-from .judge import tournament
+from .judge import default_standard, tournament
 from .llm import BudgetExceeded, LLMError, Router
 from .parse import ingest_report, parse_show
 from .rank import final_score, policy_status, post_first, select, spoiler_note
@@ -195,7 +195,7 @@ def head_to_head(show, anns, rank_pool: list[Promo], router: Router, opt: Option
     log(f"  head-to-head: {judge.p.model} compares the top {len(contenders)} promos side by side ...")
     items = {p.id: (p.duration, clip_text(show, anns, p, anonymize=False)) for p in contenders}
     try:
-        res = tournament(judge, items, rounds=opt.judge_rounds, size=opt.judge_size, log=log)
+        res = tournament(judge, items, rounds=opt.judge_rounds, size=opt.judge_size, log=log, standard=default_standard())
     except BudgetExceeded as e:
         log(f"  head-to-head skipped ({e}); keeping the score order")
         return select(rank_pool, top=opt.top, per_episode=2)

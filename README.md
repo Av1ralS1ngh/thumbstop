@@ -41,8 +41,10 @@ episodes -> [code]  parse into numbered beats (E07-B031: start, end, speaker, te
          -> [AI, a different model family] cold viewer reads ONLY the clip: hook / cliffhanger / makes-sense
          -> [agent loop, <=2 rounds] if the viewer is lost, the model picks one earlier setup moment; re-checked
          -> [code]  rank, diversity (<=2 per episode, no overlaps), ad-policy status, post-first picks, exports
-                    (experiment, off by default: --judge lets Claude re-order the best 30 side by side; it
-                    agreed with my 33 blind picks less often than the score order, see evaluate.py judge)
+                    (experiment, off by default: --judge lets Claude re-order the best 30 side by side. It
+                    agreed with my 33 blind picks less often than the score order, and so did the same judge
+                    taught my own standard or given the knowledge layer in thumbstop/knowledge/; see
+                    `python -m thumbstop.evaluate judge`)
          -> [human] editor accepts / nudges / rejects in review.html
 ```
 

@@ -2,7 +2,7 @@
 
   python -m thumbstop.evaluate build  <pack> <run_dir>   # blind labelling page + AI-judge ratings + controls
   python -m thumbstop.evaluate score  <pack> <run_dir> <decisions.csv>   # unblind and report
-  python -m thumbstop.evaluate judge  <decisions.csv> [profile]         # side-by-side judge vs my blind picks
+  python -m thumbstop.evaluate judge  <decisions.csv> [profile] [--cv] [--knowledge]  # judge vs my blind picks
 
 Session A (opening test): tool clip vs last-45s clip ending at the SAME point (only the opening differs).
 Session B (design test): tool's best vs field-standard 'model proposes whole promos' best vs last-45s of the episode.
@@ -318,9 +318,12 @@ def score(run_dir: Path, answers_csv: Path) -> str:
     return text
 
 
-def judge_check(router: Router, answers_csv: Path) -> str:
+def judge_check(router: Router, answers_csv: Path, standards: dict[str, str] | None = None,
+                knowledge: str | None = None) -> str:
     """The side-by-side judge (judge.py) on the blind tasks: every task shown in every rotation, Borda points per
-    clip, and how often the judge's pick is the one I picked blind. The tool's own pick is the baseline."""
+    clip, and how often the judge's pick is the one I picked blind. The tool's own pick is the baseline.
+    standards: task id -> the editor standard to judge that task with (cross-validation: a standard written by an
+    agent that never saw that task)."""
     from concurrent.futures import ThreadPoolExecutor
     from .judge import rank_group
     tasks = json.loads((ROOT / "labels" / "blind_tasks.json").read_text(encoding="utf-8"))
@@ -333,7 +336,9 @@ def judge_check(router: Router, answers_csv: Path) -> str:
         clips = {c["label"]: (c["label"], c["dur"], c["text"]) for c in t["clips"]}
         jobs += [(t["id"], [clips[x] for x in labs[i:] + labs[:i]]) for i in range(len(labs))]
     with ThreadPoolExecutor(max_workers=6) as ex:
-        res = list(ex.map(lambda j: (j[0], rank_group(llm, j[1], tag=f"blind:{j[0]}")[0]), jobs))
+        res = list(ex.map(lambda j: (j[0], rank_group(llm, j[1], tag=f"blind:{j[0]}",
+                                                      standard=(standards or {}).get(j[0]),
+                                                      knowledge=knowledge)[0]), jobs))
     pts: dict[str, dict[str, int]] = {}
     firsts: dict[str, set] = {}
     for tid, order in res:
@@ -375,9 +380,17 @@ def main(argv=None) -> int:
         print(f"eval calls {u.calls} (+{u.cache_hits} cached), est ${u.usd:.2f}")
     elif a[0] == "score":
         print(score(Path(a[2]), Path(a[3])))
-    elif a[0] == "judge":          # python -m thumbstop.evaluate judge <decisions.csv> [profile]
+    elif a[0] == "judge":          # python -m thumbstop.evaluate judge <decisions.csv> [profile] [--cv] [--knowledge]
+        cv, kn = "--cv" in a, "--knowledge" in a
+        a = [x for x in a if x not in ("--cv", "--knowledge")]
         router = Router(load_config(), overrides={"judge": a[2] if len(a) > 2 else ""})
-        print(judge_check(router, Path(a[1])))
+        standards = None
+        if cv:   # each half is judged with the standard an agent wrote from the OTHER half only
+            folds = json.loads((ROOT / "labels" / "standard_folds.json").read_text(encoding="utf-8"))
+            text = {f: (ROOT / "labels" / f"standard_fold{f}.txt").read_text(encoding="utf-8") for f in ("1", "2")}
+            standards = {t: text["2" if f == "1" else "1"] for f, ts in folds.items() for t in ts}
+        from .judge import default_knowledge
+        print(judge_check(router, Path(a[1]), standards, default_knowledge() if kn else None))
         u = router.budget.usage
         print(f"judge calls {u.calls} (+{u.cache_hits} cached), est ${u.usd:.2f}")
     return 0

@@ -63,3 +63,21 @@ def test_tournament_survives_failed_groups():
     assert 0 < res["failed"] < res["calls"]
     order = sorted(items, key=lambda i: -res["strength"][i])
     assert order[0] in ("P11", "P10")
+
+
+def test_judge_prompt_adds_knowledge_then_standard_and_switches_schema():
+    from thumbstop.judge import JUDGE_SYSTEM, FeltRanking, default_knowledge, judge_system
+    assert judge_system() == JUDGE_SYSTEM == judge_system("", "  ")       # plain judge: the cached prompt is unchanged
+    both = judge_system("my standard", "some knowledge")
+    assert both.startswith(JUDGE_SYSTEM) and both.index("some knowledge") < both.index("my standard")
+    kn = default_knowledge()
+    assert "punchline withheld" in kn and "Cut on the turn" in kn         # the shipped knowledge layer is readable
+
+    seen = {}
+
+    class Spy(FakeJudge):
+        def json(self, system, user, schema, **kw):
+            seen["schema"] = schema
+            return super().json(system, user, GroupRanking, **kw)
+    rank_group(Spy(), [("a", 30, "Q=1"), ("b", 30, "Q=2")], knowledge=kn)
+    assert seen["schema"] is FeltRanking                                   # with knowledge it must name the emotion first

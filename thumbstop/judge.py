@@ -7,14 +7,17 @@ one, so the judge ranks small groups, every promo meets several others in differ
 bias), and the wins are pooled into one strength per promo (a Bradley-Terry fit).
 
 Status: an experiment, off by default (--judge turns it on). On my 33 blind tasks it agreed with my own pick less
-often than the tool's score order did (Opus 4.6 19.5, Sonnet 4.6 18, GPT-OSS 19, against 21), so it did not earn
-the job. `python -m thumbstop.evaluate judge labels/blind_answers.csv <profile>` reruns that check.
+often than the tool's score order did (Opus 4.6 19.5, Sonnet 4.6 18, GPT-OSS 19, against 21). With my own standard
+learned from the other half of my picks (cross-validated) it got 16, and with the knowledge layer in knowledge/hooks.md
+it got 18.5, so neither earned the job either.
+`python -m thumbstop.evaluate judge labels/blind_answers.csv <profile> [--cv] [--knowledge]` reruns those checks.
 """
 from __future__ import annotations
 
 import math
 import random
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -31,6 +34,36 @@ JUDGE_SYSTEM = """You pick promos for a microdrama app. A promo is a 20 to 60 se
 You will read a few candidate promos as transcripts: dialogue and visible action, with times in seconds from the start of the clip. Judge only what is on the page. Imagine each one scrolling past on a phone, compare them against each other, and rank them from the one you would post first to the last. Be decisive: no ties. Return JSON only."""
 
 
+STANDARD_FILE = Path(__file__).with_name("editor_standard.txt")   # the editor's standard, learned from blind picks
+
+
+def default_standard() -> str:
+    return STANDARD_FILE.read_text(encoding="utf-8").strip() if STANDARD_FILE.exists() else ""
+
+
+STANDARD_INTRO = ("You are ranking for one particular editor. Their standard below was learned from their own blind picks; "
+                  "where it differs from the general rules above, follow their standard.")
+
+
+KNOWLEDGE_FILE = Path(__file__).with_name("knowledge") / "hooks.md"   # what moves viewers, from research
+KNOWLEDGE_INTRO = ("What moves viewers, from psychology, stand-up comedy craft and short-drama practice. Go through it "
+                   "for every promo: name the emotion the opening triggers and how fast it lands, the open question it "
+                   "plants, and whether the ending withholds the release.")
+
+
+def default_knowledge() -> str:
+    return KNOWLEDGE_FILE.read_text(encoding="utf-8").strip() if KNOWLEDGE_FILE.exists() else ""
+
+
+def judge_system(standard: str | None = None, knowledge: str | None = None) -> str:
+    parts = [JUDGE_SYSTEM]
+    if (knowledge or "").strip():
+        parts.append(f"{KNOWLEDGE_INTRO}\n{knowledge.strip()}")
+    if (standard or "").strip():
+        parts.append(f"{STANDARD_INTRO}\n{standard.strip()}")
+    return "\n\n".join(parts)
+
+
 class ClipNote(BaseModel):
     promo: int = Field(description="The promo's number")
     first_3s: str = Field(description="What a scrolling stranger gets in the first 3 seconds, in a few words")
@@ -44,11 +77,27 @@ class GroupRanking(BaseModel):
     reason: str = Field(description="One sentence: why your first choice beats your second")
 
 
-def rank_group(llm: LLM, items: list[tuple[str, float, str]], tag: str = "") -> tuple[list[str], str]:
-    """items: (id, seconds, transcript) in the order shown. Returns the ids best first, and the judge's reason."""
+class FeltNote(BaseModel):
+    promo: int = Field(description="The promo's number")
+    emotion: str = Field(description="The emotion a stranger feels in the first 3 seconds, how strong, and how fast it lands")
+    open_loop: str = Field(description="The question it plants that the viewer needs answered")
+    ending: str = Field(description="Does the cut withhold the release at its peak, or release or spoil it? A few words")
+
+
+class FeltRanking(BaseModel):
+    notes: list[FeltNote]
+    ranking: list[int] = Field(description="Every promo number exactly once, the one you would post first leading")
+    reason: str = Field(description="One sentence: why your first choice beats your second")
+
+
+def rank_group(llm: LLM, items: list[tuple[str, float, str]], tag: str = "",
+               standard: str | None = None, knowledge: str | None = None) -> tuple[list[str], str]:
+    """items: (id, seconds, transcript) in the order shown. Returns the ids best first, and the judge's reason.
+    With `knowledge`, the judge first writes down what each promo makes a viewer feel (FeltRanking)."""
     user = "\n\n".join(f"Promo {i + 1} ({dur:.0f} s)\n{text}" for i, (_, dur, text) in enumerate(items))
     user += f"\n\nRank these {len(items)} promos, best first."
-    r = llm.json(JUDGE_SYSTEM, user, GroupRanking, max_tokens=2000, prompt_version=JUDGE_VERSION, tag=tag)
+    schema = FeltRanking if (knowledge or "").strip() else GroupRanking
+    r = llm.json(judge_system(standard, knowledge), user, schema, max_tokens=2500, prompt_version=JUDGE_VERSION, tag=tag)
     order: list[str] = []
     for n in r.ranking:
         if 1 <= n <= len(items) and items[n - 1][0] not in order:
@@ -92,7 +141,8 @@ def bradley_terry(ids: list[str], wins: dict[tuple[str, str], float], iters: int
     return {i: round(math.log(v), 3) for i, v in s.items()}
 
 
-def tournament(llm: LLM, items: dict[str, tuple[float, str]], rounds: int = 3, size: int = 5, log=print) -> dict:
+def tournament(llm: LLM, items: dict[str, tuple[float, str]], rounds: int = 3, size: int = 5, log=print,
+               standard: str | None = None, knowledge: str | None = None) -> dict:
     """items: id -> (seconds, transcript). Returns {"strength", "wins", "games", "reasons", "calls", "failed"}."""
     ids = sorted(items)
     gs = groups_for(ids, rounds, size)
@@ -105,7 +155,7 @@ def tournament(llm: LLM, items: dict[str, tuple[float, str]], rounds: int = 3, s
     def one(k_g):
         k, g = k_g
         try:
-            return g, rank_group(llm, [(i, *items[i]) for i in g], tag=f"h2h:{k}")
+            return g, rank_group(llm, [(i, *items[i]) for i in g], tag=f"h2h:{k}", standard=standard, knowledge=knowledge)
         except LLMError as e:
             return g, e
 
