@@ -37,6 +37,7 @@ class Promo:
     note_confirmed: bool = False
     flags: list[str] = field(default_factory=list)
     gate: dict | None = None
+    judge: dict | None = None           # head-to-head result: strength, won, of
     repair: dict | None = None
     policy: dict = field(default_factory=dict)
     spoiler: str = ""

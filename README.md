@@ -41,6 +41,8 @@ episodes -> [code]  parse into numbered beats (E07-B031: start, end, speaker, te
          -> [AI, a different model family] cold viewer reads ONLY the clip: hook / cliffhanger / makes-sense
          -> [agent loop, <=2 rounds] if the viewer is lost, the model picks one earlier setup moment; re-checked
          -> [code]  rank, diversity (<=2 per episode, no overlaps), ad-policy status, post-first picks, exports
+                    (experiment, off by default: --judge lets Claude re-order the best 30 side by side; it
+                    agreed with my 33 blind picks less often than the score order, see evaluate.py judge)
          -> [human] editor accepts / nudges / rejects in review.html
 ```
 
@@ -50,7 +52,7 @@ capped by a budget.
 
 ## Swapping models
 
-Profiles live in `config.yaml`; each role (`annotate`, `gate`, `repair`, `propose`) names one.
+Profiles live in `config.yaml`; each role (`annotate`, `gate`, `repair`, `propose`, `judge`) names one.
 
 ```bash
 python -m thumbstop run <folder> --profile deepseek              # one model for every role
@@ -92,7 +94,7 @@ run ends, and keeps results in memory for an hour so they can be downloaded.
 ## Tests
 
 `PYTHONPATH=. .venv/bin/python -m pytest -q` - parser, format drift, validator, exports, LLM cache / retry /
-budget, policy, ranking, offline end-to-end, and the app.
+budget, policy, ranking, the head-to-head judge, offline end-to-end, and the app.
 
 ## New input formats
 

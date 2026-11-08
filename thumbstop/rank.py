@@ -81,9 +81,12 @@ def _overlap(a: Promo, b: Promo) -> float:
     return inter / max(1e-6, min(a.duration, b.duration))
 
 
-def select(promos: list[Promo], top: int = 20, per_episode: int = 2) -> tuple[list[Promo], dict[str, list[Promo]]]:
-    """Greedy diverse selection by final score. Returns (ranked list, variants keyed by primary id)."""
-    pool = sorted(promos, key=lambda p: -final_score(p))
+def select(promos: list[Promo], top: int = 20, per_episode: int = 2,
+           lead: list[Promo] | None = None) -> tuple[list[Promo], dict[str, list[Promo]]]:
+    """Greedy diverse selection by final score. Promos in `lead` (already in order, from the head-to-head judge)
+    come first and the rest follow by final score. Returns (ranked list, variants keyed by primary id)."""
+    first = {id(p) for p in lead or []}
+    pool = list(lead or []) + sorted((p for p in promos if id(p) not in first), key=lambda p: -final_score(p))
     for p in pool:                 # only promos chosen in THIS selection carry a rank
         p.rank, p.rank_reason = 0, ""
     chosen: list[Promo] = []
@@ -111,6 +114,9 @@ def select(promos: list[Promo], top: int = 20, per_episode: int = 2) -> tuple[li
 
 
 def _why_above(a: Promo, b: Promo) -> str:
+    ja = a.judge or {}
+    if ja.get("of") and (b.judge or {}).get("of"):
+        return f"ranked above #{b.rank} by the side-by-side judge (won {ja['won']} of {ja['of']} comparisons)"
     diffs = []
     if a.hook_strength > b.hook_strength:
         diffs.append("stronger opening")

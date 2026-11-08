@@ -209,10 +209,6 @@
     requestAnimationFrame(() => { jump.hidden = results.getBoundingClientRect().top < window.innerHeight - 24; });
   }
 
-  document.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", () => {
-    const el = document.getElementById(b.dataset.goto);
-    if (el) { el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); if (b.dataset.goto === "run") setTimeout(() => go.focus({ preventScroll: true }), 500); }
-  }));
   jump.addEventListener("click", () => { jump.hidden = true; results.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); });
   window.addEventListener("scroll", () => {
     if (!jump.hidden && results.getBoundingClientRect().top < window.innerHeight * 0.6) jump.hidden = true;
@@ -227,7 +223,7 @@
   });
 
   fetch("/assets/teaser.json", { cache: "no-store" }).then((r) => r.json())
-    .then((d) => window.ThumbstopReview.teaser($("#teaser"), d.promo)).catch(() => { $("#teaser").hidden = true; });
+    .then((d) => window.ThumbstopReview.teaser($("#teaser"), d.promo)).catch(() => { $(".teaser").hidden = true; });
 
   // the top bar: a hairline once the page scrolls, and the section you're in
   const topbar = $("#topbar"), navLinks = [...document.querySelectorAll("[data-nav]")];

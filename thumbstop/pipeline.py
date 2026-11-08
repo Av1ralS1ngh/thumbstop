@@ -10,7 +10,8 @@ from pathlib import Path
 
 from .annotate import EpisodeAnnotation, annotate_show
 from .export import write_all
-from .gate import drift_flag, gate_all, repair_one
+from .gate import clip_text, drift_flag, gate_all, repair_one
+from .judge import tournament
 from .llm import BudgetExceeded, LLMError, Router
 from .parse import ingest_report, parse_show
 from .rank import final_score, policy_status, post_first, select, spoiler_note
@@ -32,6 +33,11 @@ class Options:
     early_ep: int = 15
     no_notes: bool = False         # ablation: ignore the writers' continuity notes
     seeds: bool = True             # also let the model propose whole promos (validated + judged like the rest)
+    judge: bool = False            # experiment, off: order the shortlist by side-by-side comparisons (judge.py).
+                                   # On my 33 blind picks it agreed with me less often than the score order.
+    judge_extra: int = 10          # the judge compares the top `top + judge_extra` diverse promos
+    judge_rounds: int = 4
+    judge_size: int = 4
 
 
 def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) -> dict:
@@ -155,6 +161,8 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
         ranked, variants = select(rank_pool, top=opt.top, per_episode=2)
     if late:
         funnel["late_checked"] = late
+    if opt.judge and opt.gate and ranked and router["judge"].p.provider != "rules":
+        ranked, variants = head_to_head(show, anns, rank_pool, router, opt, funnel, log)
     picks = post_first(ranked, early_ep=opt.early_ep)
     funnel["ranked"] = len(ranked)
     u = router.budget.usage
@@ -170,6 +178,40 @@ def run(folder: str | Path, out: Path, router: Router, opt: Options, log=print) 
         [dict(p.to_dict(), final_score=final_score(p)) for p in pool + repaired], indent=1, default=str), encoding="utf-8")
     log(f"Done in {meta['seconds']}s | calls {u.calls} (+{u.cache_hits} cached) | est. ${u.usd:.2f} | funnel {funnel}")
     return {"show": show, "anns": anns, "pool": pool, "short": short, "ranked": ranked, "picks": picks, "meta": meta}
+
+
+def head_to_head(show, anns, rank_pool: list[Promo], router: Router, opt: Options, funnel: dict, log=print):
+    """The 0-3 scores tie at the top, so the final order comes from side-by-side comparisons: the judge ranks
+    small groups of the best promos, every promo meets several rivals in different positions, and the wins are
+    pooled into one strength each. Only promos the cold viewer followed take part; the rest keep the score order."""
+    contenders, _ = select(rank_pool, top=opt.top + opt.judge_extra, per_episode=2)
+    unchecked = [p for p in contenders if not p.gate or p.gate.get("unchecked")]
+    if unchecked:
+        gate_all(show, anns, unchecked, router["gate"], log=log)
+    contenders = [p for p in contenders if (p.gate or {}).get("passed")]
+    if len(contenders) < 3:
+        return select(rank_pool, top=opt.top, per_episode=2)
+    judge = router["judge"]
+    log(f"  head-to-head: {judge.p.model} compares the top {len(contenders)} promos side by side ...")
+    items = {p.id: (p.duration, clip_text(show, anns, p, anonymize=False)) for p in contenders}
+    try:
+        res = tournament(judge, items, rounds=opt.judge_rounds, size=opt.judge_size, log=log)
+    except BudgetExceeded as e:
+        log(f"  head-to-head skipped ({e}); keeping the score order")
+        return select(rank_pool, top=opt.top, per_episode=2)
+    if res["failed"] * 2 > res["calls"]:
+        log(f"  head-to-head: {res['failed']} of {res['calls']} groups failed; keeping the score order")
+        return select(rank_pool, top=opt.top, per_episode=2)
+    for p in contenders:
+        p.judge = {"strength": res["strength"][p.id], "won": res["wins"][p.id], "of": res["games"][p.id]}
+    lead = sorted(contenders, key=lambda p: (-p.judge["strength"], -final_score(p)))
+    funnel["head_to_head"] = len(contenders)
+    funnel["judge_groups"] = res["calls"] - res["failed"]
+    ranked, variants = select(rank_pool, top=opt.top, per_episode=2, lead=lead)
+    late = [p for p in ranked if not p.gate or p.gate.get("unchecked")]
+    if late:            # only possible when fewer promos were judged than are shown
+        gate_all(show, anns, late, router["gate"], log=log)
+    return ranked, variants
 
 
 def seed_candidates(show, anns, llm, opt: Options, log=print) -> list[Promo]:

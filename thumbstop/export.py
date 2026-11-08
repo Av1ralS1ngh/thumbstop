@@ -83,7 +83,8 @@ def promo_record(show: Show, p: Promo) -> dict:
         "cold_viewer": {k: g.get(k) for k in ("passed", "premise", "open_question", "intent_match", "intent_note",
                                               "unexplained", "hook_score", "cliff_score", "standalone_score",
                                               "judge")} if g else None,
-        "policy": p.policy, "spoiler_note": p.spoiler, "repair": p.repair, "flags": p.flags, "cut_sheet": cs,
+        "judge": p.judge, "policy": p.policy, "spoiler_note": p.spoiler, "repair": p.repair, "flags": p.flags,
+        "cut_sheet": cs,
     }
 
 

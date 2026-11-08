@@ -2,6 +2,7 @@
 
   python -m thumbstop.evaluate build  <pack> <run_dir>   # blind labelling page + AI-judge ratings + controls
   python -m thumbstop.evaluate score  <pack> <run_dir> <decisions.csv>   # unblind and report
+  python -m thumbstop.evaluate judge  <decisions.csv> [profile]         # side-by-side judge vs my blind picks
 
 Session A (opening test): tool clip vs last-45s clip ending at the SAME point (only the opening differs).
 Session B (design test): tool's best vs field-standard 'model proposes whole promos' best vs last-45s of the episode.
@@ -317,6 +318,48 @@ def score(run_dir: Path, answers_csv: Path) -> str:
     return text
 
 
+def judge_check(router: Router, answers_csv: Path) -> str:
+    """The side-by-side judge (judge.py) on the blind tasks: every task shown in every rotation, Borda points per
+    clip, and how often the judge's pick is the one I picked blind. The tool's own pick is the baseline."""
+    from concurrent.futures import ThreadPoolExecutor
+    from .judge import rank_group
+    tasks = json.loads((ROOT / "labels" / "blind_tasks.json").read_text(encoding="utf-8"))
+    key = json.loads((ROOT / "labels" / "blind_key.json").read_text(encoding="utf-8"))
+    pick = {r["task"]: r["pick"] for r in csv.DictReader(open(answers_csv, encoding="utf-8")) if not r["task"].startswith("__")}
+    llm = router["judge"]
+    jobs = []
+    for t in tasks:
+        labs = [c["label"] for c in t["clips"]]
+        clips = {c["label"]: (c["label"], c["dur"], c["text"]) for c in t["clips"]}
+        jobs += [(t["id"], [clips[x] for x in labs[i:] + labs[:i]]) for i in range(len(labs))]
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        res = list(ex.map(lambda j: (j[0], rank_group(llm, j[1], tag=f"blind:{j[0]}")[0]), jobs))
+    pts: dict[str, dict[str, int]] = {}
+    firsts: dict[str, set] = {}
+    for tid, order in res:
+        for i, x in enumerate(order):
+            pts.setdefault(tid, {}).setdefault(x, 0)
+            pts[tid][x] += len(order) - 1 - i
+        firsts.setdefault(tid, set()).add(order[0])
+    judge = {"A": 0.0, "B": 0.0}
+    tool = {"A": 0, "B": 0}
+    n = {"A": 0, "B": 0}
+    for tid, p in pick.items():
+        if p in ("tie", "none", "") or tid not in pts:
+            continue
+        s = tid[0]
+        best = max(pts[tid].values())
+        top = [x for x, v in pts[tid].items() if v == best]
+        judge[s] += (1 / len(top)) if p in top else 0.0
+        tool[s] += key[tid][p]["design"] == "tool"
+        n[s] += 1
+    steady = sum(len(f) == 1 for f in firsts.values())
+    return (f"Side-by-side judge ({llm.p.model}) vs my blind picks: same ending {judge['A']:.1f}/{n['A']}, "
+            f"three designs {judge['B']:.1f}/{n['B']}, total {judge['A'] + judge['B']:.1f}/{n['A'] + n['B']}. "
+            f"The tool's own pick: {tool['A']}/{n['A']} and {tool['B']}/{n['B']}, total {tool['A'] + tool['B']}/{n['A'] + n['B']}. "
+            f"Same first choice in every order: {steady}/{len(firsts)}.")
+
+
 def main(argv=None) -> int:
     from .__main__ import _load_env
     _load_env()
@@ -332,6 +375,11 @@ def main(argv=None) -> int:
         print(f"eval calls {u.calls} (+{u.cache_hits} cached), est ${u.usd:.2f}")
     elif a[0] == "score":
         print(score(Path(a[2]), Path(a[3])))
+    elif a[0] == "judge":          # python -m thumbstop.evaluate judge <decisions.csv> [profile]
+        router = Router(load_config(), overrides={"judge": a[2] if len(a) > 2 else ""})
+        print(judge_check(router, Path(a[1])))
+        u = router.budget.usage
+        print(f"judge calls {u.calls} (+{u.cache_hits} cached), est ${u.usd:.2f}")
     return 0
 
 

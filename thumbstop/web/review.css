@@ -14,7 +14,7 @@
   --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --serif: "Instrument Serif", ui-serif, Georgia, serif;
 }
-.tsr-page { margin: 0; background: var(--bg);
+.tsr-page { margin: 0; background: radial-gradient(1200px 600px at 85% -10%, rgba(217, 180, 106, .10), transparent 60%), var(--bg);
   color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
 .tsr-wrap { max-width: 1320px; margin: 0 auto; padding: 40px 28px 80px; }
 .tsr { color: var(--ink); font: 15px/1.55 var(--sans); }
@@ -22,7 +22,7 @@
 .tsr button { font: inherit; color: inherit; cursor: pointer; }
 .tsr :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .tsr .mono { font-family: var(--mono); font-size: .86em; letter-spacing: -.01em; }
-.tsr-eyebrow { font: 500 13px/1 var(--sans); color: var(--gold); }
+.tsr-eyebrow { font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
 
 /* ------------------------------------------------------------------ header */
 .tsr-head { display: grid; gap: 14px; margin-bottom: 34px; }

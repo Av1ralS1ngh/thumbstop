@@ -104,6 +104,7 @@ roles:
   gate: gptoss            # cold-viewer check (different family from annotate)
   repair: opus46          # picks one setup segment when the cold viewer is lost
   propose: opus46         # field-standard baseline: model proposes whole promos
+  judge: opus46           # head-to-head: orders the final shortlist by comparing promos side by side
 
 budget:
   max_calls: 600
